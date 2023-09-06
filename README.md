@@ -41,7 +41,7 @@ Aunque de algunos de los campos de la base de datos hablaremos más adelante (*l
 
 - *id* es la clave primaria de identificación de cada usuario.
 - *username, mail* y *password* corresponden a los datos de acceso e identificación.
-- *role* y *guard* son campos que indican el rango de la persona y si está o no de guardia. Ver [lista de conectados](#lista-de-conectados) y [rangos](#rangos).
+- *role* y *guard* son campos que indican el rango de la persona y si está o no de guardia. Ver [lista de conectados](#lista-de-conectados) y [rangos y comandos](#rangos-y-comandos).
 - *color* y *emoji* están relacionados con cómo se muestran nuestros mensjaes. Ver [chat](#chat).
 - *last_online* y *last_chat_refresh* son campos que sirven para mostrar la lista de personas online y los mensajes desde el momento en que entramos al chat. Ver [lista de conectados](#lista-de-conectados) y [chat](#chat)
 - *current_room* indica la sala donde se está chateando. Ver [chat](#chat)
@@ -208,32 +208,6 @@ function isNewbie($userid) {
     $resp = $query->fetch_array();
 
     if ($resp[0] <= 100) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES GUARDIA
-function isGuard($userid) {
-    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
-    $query = $GLOBALS['db']->query($sql);
-    $resp = $query->fetch_array();
-
-    if ($resp['role'] > 1) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES CAPITÁN
-function isCaptain($userid) {
-    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
-    $query = $GLOBALS['db']->query($sql);
-    $resp = $query->fetch_array();
-
-    if ($resp['role'] > 3) {
         return true;
     } else {
         return false;
@@ -544,7 +518,7 @@ if (file_exists('css/room_styles/'.$_SESSION["chatroom"].'.css'))  {
 } 
 ```
 
-Normalmente una persona puede moverse pulsando el botón de "Ir al Lobby", aunque, en las ocasiones en las que un guardia utiliza el comando */capturar* para mover a un usuario, éste perderá la capacidad de moverse de sala hasta que se le vuelva a mover con el comando */llevar*, esto lo veremos mejor en la sección de [comandos](#comandos).
+Normalmente una persona puede moverse pulsando el botón de "Ir al Lobby", aunque, en las ocasiones en las que un guardia utiliza el comando */capturar* para mover a un usuario, éste perderá la capacidad de moverse de sala hasta que se le vuelva a mover con el comando */llevar*, esto lo veremos mejor en la sección de [rangos y comandos](#rangos-y-comandos).
 
 ```PHP
 if (getUserInfo($_SESSION["userid"])['can_move'] == 1) {
@@ -554,7 +528,52 @@ if (getUserInfo($_SESSION["userid"])['can_move'] == 1) {
 }
 ```
 
-Los guardias, como veremos de forma más específica en la sección de [rangos](#rangos) y [comandos](#comandos) tienen varios poderes para manejar dónde están los usuarios: en concreto los comandos */capturar* y */llevar*. Estos comandos lo que hacen es cambiar en la base de datos el campo *current_room* de alguien concreto en la tabla de usuarios.
+Los guardias, como veremos de forma más específica en la sección de tienen varios poderes para manejar dónde están los usuarios: en concreto los comandos */capturar* y */llevar*. Estos comandos lo que hacen es cambiar en la base de datos el campo *current_room* de alguien concreto en la tabla de usuarios. La diferencia entre ellos es que */capturar* pide que alguien pueda moverse de sala, mientras que */llevar* permite el movimiento.
+
+```PHP
+case '/capturar':
+    if ((!isset($arrg[1]) or $arrg[1] == "") or (!isset($arrg[2]) or $arrg[2] == "")) {
+        botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Para mover a alguien y evitar que se mueva el comando es /capturar {nick} {shortname_room}.",$_SESSION["username"]);
+    } else {
+        if (userExists($arrg[1])) {
+            if (userIsOnline($arrg[1])) { 
+                if (roomExists($arrg[2])) {
+                    $sql = "UPDATE `users` SET current_room = '".$arrg[2]."', can_move = '0' WHERE username = '".$arrg[1]."'";
+                    $query = $GLOBALS['db']->query($sql);
+                    botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Acabas de mover a ".$arrg[1]." a la sala ".getRoomInfo($arrg[2])['name'].".",$_SESSION["username"]);
+                } else {
+                    botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! La sala ".$arrg[2]." no existe, puedes comprobar en el panel el shortname de todas las salas (este shortname es el que debes usar en el comando).",$_SESSION["username"]);
+                }
+            } else {
+                botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! ".$arrg[1]." no está conectado, así que no puedes moverle.",$_SESSION["username"]);
+            }
+        } else {
+            botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! no encuentro a ".$arrg[1]." ¿Estás seguro de que existe?.",$_SESSION["username"]);
+        }
+    }
+    break;
+    case '/llevar':
+    if ((!isset($arrg[1]) or $arrg[1] == "") or (!isset($arrg[2]) or $arrg[2] == ""))  {
+        botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Tienes que decirme a quién mover y a dónde. Usa el comando así: /liberar {nick} {shortname_room}.",$_SESSION["username"]);
+    } else {
+        if (userExists($arrg[1])) {
+            if (userIsOnline($arrg[1])) {
+                if (roomExists($arrg[2])) {
+                    $sql = $sql = "UPDATE `users` SET current_room = '".$arrg[2]."', can_move = '1' WHERE username = '".$arrg[1]."'";
+                    $query = $GLOBALS['db']->query($sql);
+                    botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Acabas de mover a ".$arrg[1]." a la sala ".getRoomInfo($arrg[2])['name'].".",$_SESSION["username"]);
+                } else {
+                    botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! La sala ".$arrg[2]." no existe, puedes comprobar en el panel el shortname de todas las salas (este shortname es el que debes usar en el comando).",$_SESSION["username"]);
+                }
+            } else {
+                botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! ".$arrg[1]." no está conectado, así que no puedes moverle.",$_SESSION["username"]);
+            }
+        } else {
+            botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! no encuentro a ".$arrg[1]." ¿Estás seguro de que existe?.",$_SESSION["username"]);
+        }
+    }
+    break;
+```
 
 Para poder hacer efectivo en el chat este cambio lo que hice fue aprovechar la actualización cada segundo de [la lista de usuarios conectados](#lista-de-conectados) (aunque podría haber usado el [chat](#chat) igualmente) para hacer una comproobación de la sala que aparece en la base de datos. En caso de que la *current_room* de la base de datos y la de la variable de sesión *chatroom* sean distintas, esto implicará, en absolutamente todos los casos, que se ha movido de sala a la perona.
 
@@ -618,7 +637,7 @@ function botPrivateMsg($botid, $rid, $msg, $destiny) {
 }
 ```
 
-Para las alertas, existe el comando */alertar* que básicamente permite a los guardias añadir un *botPrivateMsg* (hablaremos más en profundidad de los comandos en [comandos](#comandos))
+Para las alertas, existe el comando */alertar* que básicamente permite a los guardias añadir un *botPrivateMsg* (hablaremos más en profundidad de los comandos en [rangos y comandos](#rangos-y-comandos))
 
 ```PHP
 case '/alertar':
@@ -654,4 +673,311 @@ case '/alertar':
             botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! No puedo mandar la alerta a ".$arrg[1]." porque no el usuario no existe",$_SESSION["username"]);
         }
     }
+```
+
+## Perfil
+
+Al hacer click en el botón de Mi Perfil accedes a los dos paneles donde es posible cambiar alguna información personal de tu perfil como el nombre de usuario, el email o la contraseña.
+
+El script aquí tiene una lógica tan sencilla como comprobar si ha habido algún cambio y cuál ha sido, en base a eso hace las comprobaciones pertinentes y ejecuta el cambio. En el caso de haber cambiado el nombre de usuario, además, te desconecta para obligarte a reloguearte y que así todos los cambios se hagan efectivos. Esto tiene una doble función: por un lado evita que algunas funciones que toman como parámetro el nombre de usuario causen errores, por otro lado, actualiza las variables de sesión.
+
+```PHP
+if (isset($_POST["change_private_info"])) {
+    $mail = htmlentities($_POST["email"]);
+    $username = htmlentities($_POST["username"]);
+    
+    if (($mail != $userinfo['mail']) or ($username != $_SESSION["username"]) or (!empty($_POST["password"]) and !empty($_POST["password2"]))) {
+        //Ha habido algún cambio
+        if (!empty($_POST["password"]) and !empty($_POST["password2"])) {
+            if ($_POST["password"] == $_POST["password2"]) {
+                $newPassword = md5(htmlentities($_POST["password"]));
+                $sql1 = "UPDATE `users` SET password = '".$newPassword."' WHERE id = '".$_SESSION["userid"]."'";
+            } else {
+                $error = '004x001';
+            }
+        }
+
+        if($mail != $userinfo['mail']) {
+            $sql2 = "UPDATE `users` SET mail = '".$mail."' WHERE id = '".$_SESSION["userid"]."'";
+        }
+
+        if ($username != $userinfo["username"]) {
+            $sqlquery = "SELECT count(id) FROM `users` WHERE username = '".$username."'";
+            $goquery = $db->query($sqlquery);
+            $goresp = $goquery->fetch_array();
+
+            if ($goresp[0] > 0) {
+                $error = '004x002';
+            } else {
+                $sql3 = "UPDATE `users` SET username = '".$username."', can_change_username = '0' WHERE id = '".$_SESSION["userid"]."'";
+            }
+        }
+
+        if (isset($sql1)) {
+            $db->query($sql1) or die($db->error);
+        } elseif (isset($sql2)) {
+            $db->query($sql2) or die($db->error);;
+        } elseif (isset($sql3)) {
+            $db->query($sql3) or die($db->error);;
+            echo '<script type="text/JavaScript"> location.assign("logout.php"); </script>';
+        }
+
+        if (!isset($error)) {
+            $alert = "Se han cambiado tus datos correctamente.";
+        }
+
+    }
+}
+```
+
+De inicio, en el formulario aparece desactivada la opción de cambiar el nombre de usuario. Para que sea posible cambiar este dato, un guardia debe usar el comando */cambionombre* que está disponible para tenientes (tendrás más información sobre este rango en la sección de [rangos y comandos](#rangos-y-comandos))
+
+```PHP
+if ($userinfo['can_change_username'] == 0) {
+    echo '<td><input type="text" name="username" value="'.$_SESSION["username"].'" disabled />';
+    echo '<input type="hidden" name="username" value="'.$_SESSION["username"].'" />';
+} else {
+    echo '<td><input type="text" name="username" value="'.$_SESSION["username"].'" />';
+}
+```
+```PHP
+case '/cambionombre':
+    if (!isset($arrg[1]) or $arrg[1] == "") {
+        botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Tienes qué decirme a quién quieres permitir que se cambie el nombre con /cambionombre {nick}.",$_SESSION["username"]);
+    } else {
+        if (userExists($arrg[1])) {
+            $sql = "UPDATE `users` SET can_change_username = '1' WHERE username = '".$arrg[1]."'";
+            $query = $GLOBALS['db']->query($sql);
+            botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! ¡Hecho! Ahora ".$arrg[1]." podrá cambiar su nombre de usuario. No olvides dejar una nota en la ficha del usuario.",$_SESSION["username"]);
+        } else {
+            botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Ese nombre de usuario no existe. Comprueba el nick que has escrito.",$_SESSION["username"]);
+        }
+    }
+    break;
+```
+
+En el menú de la derecha, existe la opción de configurar las opciones de chat que ya hemos mencionado en el [sistema de usuarios](#sistema-de-usuarios) y en [chat](#chat). Básicamente son dos opciones:
+- El color del nombre, que configura el color en el que aparece tu nombre de usuario en el chat.
+- El emoji, que aparecerá al lado de tu nombre de usuario en el chat.
+
+```PHP
+if (isset($_POST["change_chat_options"])) {
+    $color = $_POST["color"];
+    $emoji = $_POST["emoji"];
+
+    $sql = "UPDATE `users` SET color = '".$color."', emoji = '".$emoji."' WHERE id = '".$_SESSION["userid"]."'";
+    $query = $db->query($sql);
+
+    $alert = "Se han realizado los cambios correctamente";
+}
+```
+
+## Rangos y comandos
+
+No voy a mentir. Cuando inicié este proyecto una de las funcionalidades que más me apetecía programar eran los comandos. Recuerdo que cuando entraba a Lycos Chat y veía allí a los oficiales (lo que aquí son los guardias) siempre trataba de imaginar qué comandos tenían y qué poderes tenían. La realidad es que podría haberme dedicado a hacer cientos de estos, y estoy seguro de que acabaré añadiendo muchos de ellos por simple gusto, aunque, de inicio, he tratado de ser coherente.
+
+Los rangos y los comandos van de la mano, el rol o el rango que un usuario tiene define, entre otras muchas cosas, los permisos que tiene para entrar a determinadas salas, la posibilidad o no de abrir el panel de guardia (que aún está en desarrollo) y la cantidad de comandos que puede realizar.
+
+***Existen 5 rangos en el chat que, en la base de datos, están numerados del 0 a 4:***
+- 0: El rango por defecto y determina el usuario corriente sin ningún tipo de permisos especiales.
+- 1: Rango reservado para el sistema de vip (que aún no está implementado) y que permitirá crear salas privadas y entrar a salas llenas, de newbies y establecidas como vip_only.
+- 2: Guardia, es el primer nivel de moderación y tiene los comandos básicos de moderación del chat y salas establecidas como moderation_only.
+- 3: Teniente, es el segundo nivel de moderación y el más alto. Tiene acceso a todo lo que implica el nivel de guardia y además, se le brinda acceso a algunos comandos adicionales que requieren un mayor nivel de responsabilidad.
+- 4: Capitán, es el nivel de administración. Por defecto el usuario GUARDIA tiene nivel de administración. Este nivel tiene acceso a todos los permisos y a las salas establecidas como captain_only.
+
+Los rangos son ascendentes, es decir, que los rangos con una numeración mayor tienen acceso a todos los permisos de la numeración menor (los guardias tienen acceso a los permisos vip, los capitanes a los comandos de tenientes, etc).
+
+Existen varias funciones para comprobar si un usuario tiene un nivel concreto:
+
+```PHP
+//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES VIP
+function isVip($userid) {
+    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
+    $query = $GLOBALS['db']->query($sql);
+    $resp = $query->fetch_array();
+
+    if ($resp['role'] > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES GUARDIA
+function isGuard($userid) {
+    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
+    $query = $GLOBALS['db']->query($sql);
+    $resp = $query->fetch_array();
+
+    if ($resp['role'] > 1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES TENIENTE
+function isTenient($userid) {
+    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
+    $query = $GLOBALS['db']->query($sql);
+    $resp = $query->fetch_array();
+
+    if ($resp['role'] > 2) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES CAPITÁN
+function isCaptain($userid) {
+    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
+    $query = $GLOBALS['db']->query($sql);
+    $resp = $query->fetch_array();
+
+    if ($resp['role'] > 3) {
+        return true;
+    } else {
+        return false;
+    }
+}
+```
+
+Es posible ver los guardias, tenientes y capitanes de guardia usando el comando */guardias*
+
+```PHP
+case '/guardias':
+    $time = time()-60;
+    $sql = "SELECT * FROM `users` WHERE guard = '1' and last_online >= '".$time."'";
+    $query = $GLOBALS['db']->query($sql);
+
+    if ($query->num_rows > 0) {
+        $guards = ' ';
+        while ($resp = $query->fetch_array()) {
+            $guards .= "<b>".$resp['username']."</b> que está en la sala <i>".getRoomInfo($resp['current_room'])['name']."</i>, ";
+        }
+
+        botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Actualmente hay ".$query->num_rows." oficiales de guardia:".$guards." puedes escribirle(s) un mensaje privado o seguirle(s) con /seguir si necesitas algo.",$_SESSION["username"]);
+    } else {
+        botPrivateMsg(4,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Lamento decirte que ahora mismo no hay oficiales de guardia.",$_SESSION["username"]);
+    }
+    break;
+```
+
+Dentro de *comandos.php* está toda la lógica de programación de éstos y se divida en tres partes:
+- Función `commands()` que devuelve un array de comandos, donde aparecen todos éstos, el rango mínimo para realizarlos y la descripción y la sintaxis de cada comando.
+- Funciones de comandos. Son básicamente 4: 
+    - `isCommand()` comprueba si un mensaje es un comando y si éste existe
+    - `executeCommand()` que es una función muy similar a la anterior pero que llama la función de ejecución
+    - `doExecuteCommand()` que ejecuta el comando concreto
+    - `incorrectCommand()` crea un bot_private informando de los errores encontrados ejecutando un comando concreto
+
+La lógica para separar, por ejemplo, `isCommand()` y `executeCommand()` es la necesidad de tener un valor voleano que confirme que un mensaje es un comando válido sin ejecutarlo, y otra que hiciese la misma comprobación pero llamando a una función de ejecución. La función `doExecuteCommand()` está separada de `executeCommand()` principalmente por motivos de lectura ya que la función `doExecuteCommand()` es muy grande, ya que contiene todos los comandos.
+
+```PHP
+//FUNCIÓN QUE DEVUELVE UNA ARRAY CON TODOS LOS COMANDOS Y EL NIVEL NECESARIO PARA USARLOS
+function commands() {
+    $commands = array(
+        '/cambionombre' => array(3,'/cambionombre {username}','Permite que el usuario pueda cambiar su nombre de usuario'),
+        '/guardia' => array(2,'/guardia','Activa o desactiva la guardia. Mientras estás de guardia aparece el 🎖️ junto a tu nombre de usuario en la lista de conectados y en el chat. Además apareces, junto con la sala en la que estás cuando la gente utiliza el comando /guardias'),
+        '/llevar' => array(2,'/llevar {username} {room_shortname}','Mueve de sala a un usuario. El usuario puede volver a cambiar de sala'),
+        '/capturar' => array(2,'/capturar {username} {room_shortname}','Mueve de sala al usuario y le desactiva la posibilidad de cambiar de sala. Para que el usuario pueda volver a moverse de sala, tienes que moverle con el comando /llevar'),
+        '/info' => array(2,'/info {username}','Comprueba si alguien está registrado con ese nick, y si está o no conectado'),
+        '/alertar' => array(2,'/alertar {username} {botid} {msg}','Alerta al usuario, mandando un mensaje de bot (del estilo private_bot_message, en el que aparece la imagen del bot'),
+        '/comandos' => array(0,'/comandos','Te cita la lista de comandos que puedes usar con tu rango actual'),
+        '/quien' => array(0,'/quien {username}','Te devuelve si la persona es newbie o no y si es guardia o no'),
+        '/rango' => array(0,'/rango','Te devuelve tu rango [En la actualidad te dice tu rango de usuario, pero la idea es que te devuelva más adelante tu rango (entre los basados en mensajes)]'),
+        '/guardias' => array(0,'/guardias','Devuelve todas las personas que se encuentran en modo guardia así como su ubicación'),
+        '/seguir' => array(0,'/seguir {username}','Te mueve hacia la sala donde está el usuario')
+    );
+
+    return $commands;
+}
+```
+
+```PHP
+//FUNCIÓN QUE IDENTIFICA LOS COMANDOS Y COMPRUEBA SI ESTOS EXISTEN
+function isCommand($msg) {
+    $commands = commands();
+
+    //Si empieza por / es un comando
+    if (substr($msg,0,1) == '/') {
+       //Separamos el comando de los argumentos
+       $arrg = explode(" ", $msg);
+       
+       //Comprobamos que existe el comando
+       if (isset($commands[$arrg[0]])) {
+            if ($_SESSION["role"] >= $commands[$arrg[0]][0]) {
+                return true;
+            } else {
+                incorrectCommand();
+                return true;
+            }
+       } else {
+        incorrectCommand();
+        return true;
+       } 
+    } else {
+        return false;
+    }
+}
+
+//FUNCIÓN DE PASO PARA COMPROBAR Y EJECUTAR EL doExecuteCommand
+function executeCommand($msg) {
+    $commands = commands();
+
+    //Si empieza por / es un comando
+    if (substr($msg,0,1) == '/') {
+       //Separamos el comando de los argumentos
+       $arrg = explode(" ", $msg);
+       
+       //Comprobamos que existe el comando
+       if (isset($commands[$arrg[0]])) {
+            if ($_SESSION["role"] >= $commands[$arrg[0]][0]) {
+                doExecuteCommand($arrg);
+                return true;
+            } else {
+                return false;
+            }
+       } else {
+        return false;
+       } 
+    } else {
+        return false;
+    }
+}
+```
+
+No voy a dejar aquí todo el `doExecuteCommands()` porque una parte de esos comandos se han ido publicando en sus zonas correspondientes (por ejemplo, la función */cambionombre* en está en [perfil](#perfil)). Basicamente esa función es un switch que comprueba el comando y hay un case para cada uno de ellos, en base a eso ejecuta toda la lógica de programación de cada uno de ellos
+
+```PHP
+function doExecuteCommand($arrg) {
+    switch ($arrg[0]) {
+        case '/comando1':
+            //Lógica de programación del comando1 sus argumentos serán $arrg[1...n]
+            break;
+        case '/comando2':
+            //Lógica de programación del comando2 sus argumentos serán $arrg[1...n]
+            break;
+         case '/comando2':
+            //Lógica de programación del comando2 sus argumentos serán $arrg[1...n]
+            break;
+    }
+}
+```
+
+Hay un comando que requiere especial atención, y es, básicamente, el que permite ver los comandos de los que se tiene permiso para ejecutar
+
+```PHP
+case '/comandos':
+    $commands = commands();
+    $commandlist = " ";
+    foreach ($commands as $clave => $valor) {
+        if ($valor[0] <= $_SESSION["role"]) {
+            $commandlist .= "<b>".$clave."</b> ";
+        }
+    }
+
+    botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Los comandos que puedes utilizar son:".$commandlist." ¡Espero haber sido de ayuda!",$_SESSION["username"]);
+    break;
 ```
