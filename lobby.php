@@ -31,6 +31,26 @@ if (isset($_GET["goroom"])) {
         if (AllowedInRoom($_SESSION['userid'], $room) == 'ok') {
             $_SESSION["chatroom"] = $room;
             $sql = $db->query("UPDATE `users` SET current_room = '".$room."' WHERE id = '".$_SESSION["userid"]."'");
+
+            //Si hay un bot en la sala, manda un saludo.
+            $sqlbot = "SELECT id FROM `users` WHERE current_room = '".$room."' and bot = '1'";
+            $querybot = $db->query($sqlbot);
+            $respbot = $querybot->fetch_array();
+            $num = $querybot->num_rows;
+
+            if ($num > 0) {
+                $sqlsaludos = "SELECT * FROM `saludos` WHERE botid = '".$respbot['id']."' ORDER BY RAND()";
+                $querysaludo = $db->query($sqlsaludos);
+                $saludos = $querysaludo->fetch_array();
+
+                $saludo = str_replace('{nick}',$_SESSION["username"],$saludos);
+
+                $date = time()+5;
+
+                $sqlmsg = "INSERT INTO `chat` (uid, rid, msg, conditions, date, destiny) VALUES('".$respbot[0]."', '".$resp["id"]."','".$saludo['msg']."','public_bot','".$date."','public')";
+                $insertmsg = $db->query($sqlmsg);
+            }
+
             header("Location: chat.php");
         } else {
             $error = AllowedInRoom($_SESSION["userid"], $room);

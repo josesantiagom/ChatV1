@@ -11,6 +11,7 @@ Inicio del proyecto: agosto 2023, final del proyecto: septiembre 2023
 - [Sistema de usuarios](#sistema-de-usuarios)
 - [Chat](#chat)
 - [Salas](#salas)
+- [Bots](#bots)
 
 ## Introducción
 ChatV1 es un proyecto que nace de dos necesidades: la primera es la necesidad de añadir proyectos en el portafolio que puedan demostrar mis capacidades como programador PHP, y, la segunda, la necesidad de que este proyecto consistiera en sí un reto mental.
@@ -564,4 +565,85 @@ if ($roomInDb != $_SESSION["chatroom"]) {
         echo '<script type="text/JavaScript"> location.assign("chat.php"); </script>';
     }
 }
+```
+
+## Bots
+
+Los bots eran uno de los aspectos más característicos del chat de Lycos en el que está inspirado este proyecto. Tenían una triple función:
+- Aparecían en salas características, saludaban al entrar y al usuario y tenían algunas frases de conversación como respuesta a algunas claves concretas.
+- Eran la forma en la que el chat te daba feedback de lo que hacías: como respuesta a los comandos, como saludo, si recibías un mensaje privado, etc.
+- Era la forma en la que un moderador te podía alertar de algo.
+
+La idea era retomar ese parte del chat y programarla en PHP. Comencé creando los bots como usuarios normales, están en la base de datos de usuario (tal y como hemos visto en el [sistema de usuarios](#sistema-de-usuarios) tienen un valor 1 en el campo bot), cuando se actualiza el last_online de una persona se actualiza también el last_online de un bot. De esa forma, siempre aparecen conectados en la sala en la que deberían estar.
+
+Cuando alguien entra a una sala, el bot de la sala suele enviar uno de sus varios saludos característicos.
+
+```PHP
+//Si hay un bot en la sala, manda un saludo.
+$sqlbot = "SELECT id FROM `users` WHERE current_room = '".$room."' and bot = '1'";
+$querybot = $db->query($sqlbot);
+$respbot = $querybot->fetch_array();
+$num = $querybot->num_rows;
+
+if ($num > 0) {
+    $sqlsaludos = "SELECT * FROM `saludos` WHERE botid = '".$respbot['id']."' ORDER BY RAND()";
+    $querysaludo = $db->query($sqlsaludos);
+    $saludos = $querysaludo->fetch_array();
+
+    $saludo = str_replace('{nick}',$_SESSION["username"],$saludos);
+
+    $date = time()+5;
+
+    $sqlmsg = "INSERT INTO `chat` (uid, rid, msg, conditions, date, destiny) VALUES('".$respbot[0]."', '".$resp["id"]."','".$saludo['msg']."','public_bot','".$date."','public')";
+    $insertmsg = $db->query($sqlmsg);
+}
+```
+
+Para la respuesta a los comandos, existe una función que añade una alerta o un mensaje privado de un bot, que, como ya se expuso en [chat](#chat) se ven de una forma muy concreta, y mostrando el avatar del bot.
+
+```PHP
+//FUNCIÓN QUE REGISTRA UN PRIVATE BOT MSG EN UNA SALA CONCRETA
+function botPrivateMsg($botid, $rid, $msg, $destiny) {
+    $sql = "INSERT INTO `chat` (uid, rid, msg, conditions, date, destiny) VALUES('".$botid."', '".$rid."', '".$msg."','private_bot','".time()."', '".$destiny."')"; 
+    $query = $GLOBALS['db']->query($sql) or die($GLOBALS['db']->error);
+    return true;
+}
+```
+
+Para las alertas, existe el comando */alertar* que básicamente permite a los guardias añadir un *botPrivateMsg* (hablaremos más en profundidad de los comandos en [comandos](#comandos))
+
+```PHP
+case '/alertar':
+    if ((!isset($arrg[1]) or $arrg[1] == "") or (!isset($arrg[2]) or $arrg[2] == "") or (!isset($arrg[3]) or $arrg[3] == ""))  {
+        botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Algo está mal. Debes usar el comando de la siguiente forma <b>/alertar {nick} {botid} {mensaje}. El el panel tienes información sobre los botid.",$_SESSION["username"]);
+    } else {
+        if (userExists($arrg[1])) {
+            if (userIsOnline($arrg[1])) {
+                $botname = getUserInfo($arrg[2])['username'];
+                if (isBot($botname)) {
+                    $uid = getUserId($arrg[1]);
+                    $room = getUserInfo($uid)['current_room'];
+                    $rid = getRoomInfo($room)['id'];
+                    $user = $arrg[1];
+                    $bot = $arrg[2];
+                    
+                    //eliminados todo lo que no sea mensaje
+                    unset($arrg[0]);
+                    unset($arrg[1]);
+                    unset($arrg[2]);
+
+                    $msg = implode(" ",$arrg);
+
+                    botPrivateMsg($bot, $rid, $msg, $user);
+                    botPrivateMsg($bot,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Mensaje enviado: ".$msg,$_SESSION["username"]);
+                } else {
+                    botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! El id seleccionadop no es de un bot. Recuerda que en el panel tienes todos los botid.",$_SESSION["username"]);
+                }
+            } else {
+                botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! No puedo mandar la alerta a ".$arrg[1]." porque no está conectado",$_SESSION["username"]);
+            }
+        } else {
+            botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! No puedo mandar la alerta a ".$arrg[1]." porque no el usuario no existe",$_SESSION["username"]);
+        }
+    }
 ```
