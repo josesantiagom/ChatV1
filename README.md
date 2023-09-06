@@ -549,7 +549,9 @@ if (getUserInfo($_SESSION["userid"])['can_move'] == 1) {
 
 Los guardias, como veremos de forma más específica en la sección de [rangos](#rangos) y [comandos](#comandos) tienen varios poderes para manejar dónde están los usuarios: en concreto los comandos */capturar* y */llevar*. Estos comandos lo que hacen es cambiar en la base de datos el campo *current_room* de alguien concreto en la tabla de usuarios.
 
-Para poder hacer efectivo en el chat este cambio lo que hice fue aprovechar la actualización cada segundo de la lista de usuarios (aunque podría haber usado el chat igualmente) para hacer una comrpobación de la sala que aparece en la base de datos. En caso de que la *current_room* de la base de datos y la de la variable de sesión *chatroom* sean distintas, esto implicará, en absolutamente todos los casos, que se ha movido de sala a la perona. En este caso se igualaría la variable de sesión y se dirigiría la página directamente a chat.php con la intención de mostrar la nueva sala y actualizar siempre el *last_chat_refresh* (la razón por la que desde chat.php vamos a chat.php en vez de actualizar la página es eliminar los posibles *$_GET["return]* y asegurarnos de que se actualiza el *last_chat_refresh*)
+Para poder hacer efectivo en el chat este cambio lo que hice fue aprovechar la actualización cada segundo de [la lista de usuarios conectados](#lista-de-conectados) (aunque podría haber usado el [chat](#chat) igualmente) para hacer una comproobación de la sala que aparece en la base de datos. En caso de que la *current_room* de la base de datos y la de la variable de sesión *chatroom* sean distintas, esto implicará, en absolutamente todos los casos, que se ha movido de sala a la perona.
+
+En este caso se igualaría la variable de sesión y se dirigiría la página directamente a *chat.php* con la intención de mostrar la nueva sala y actualizar siempre el *last_chat_refresh* (la razón por la que desde *chat.php* vamos a *chat.php* en vez de actualizar la página es eliminar los posibles *$_GET["return]* y asegurarnos de que se actualiza el *last_chat_refresh*)
 
 ```PHP
 $roomInDb = getUserInfo($_SESSION["userid"])['current_room'];
