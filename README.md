@@ -44,43 +44,43 @@ Aunque de algunos de los campos de la base de datos hablaremos más adelante (*l
 El registro es un sistema muy sencillo en el que se comprueba que el nombre de usuario tenga, al menos, 3 carácteres y la contraseña 8; y ue no contenga carácteres prohibidos. También se comprueba que el usuario no existiera con anterioridad.
 
 ```php
-    $username = htmlentities($_POST["username"]);
-    $password = md5(htmlentities($_POST["password"]));
-    $mail = htmlentities($_POST["mail"]);
+$username = htmlentities($_POST["username"]);
+$password = md5(htmlentities($_POST["password"]));
+$mail = htmlentities($_POST["mail"]);
 
-    $letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    $num = "0123456789";
-    $symbols = "_.-";
+$letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+$num = "0123456789";
+$symbols = "_.-";
 
-    //Comprobamos que el username no tiene carácteres prohibidos
-    for($i=0;$i<strlen($username);$i++){ 
-        if (!strstr($letras,substr($username,$i,1)) and !strstr($num,substr($username,$i,1)) and !strstr($symbols,substr($username,$i,1))) {
-            $error = '001x003';
-        }
-    } 
-    
-    //Comprobamos que tiene al menos 3 carácteres
-    if (strlen($username) < 3 or strlen($_POST["password"]) < 8) {
-        $error = '001x004';
+//Comprobamos que el username no tiene carácteres prohibidos
+for($i=0;$i<strlen($username);$i++){ 
+    if (!strstr($letras,substr($username,$i,1)) and !strstr($num,substr($username,$i,1)) and !strstr($symbols,substr($username,$i,1))) {
+        $error = '001x003';
     }
-    
-    if (!isset($error)) {
-        //Comprobamos que el nick o el email no existan
-        $sql = "SELECT id FROM `users` WHERE username = '".$username."'";
-        $sql2 = "SELECT id FROM `users` WHERE mail = '".$mail."'";
-        $query = $db->query($sql) or die($db->error);
-        $query2 = $db->query($sql2) or die($db->error);
+} 
 
-        if ($query->num_rows > 0) {
-            $error = "001x001";
-        } elseif ($query2->num_rows > 0) {
-            $error = "001x002";
-        } else {
-            $sql3 = "INSERT INTO `users` (username, mail, password, role) VALUES ('".$username."', '".$mail."', '".$password."', '0')";
-            $query3 = $db->query($sql3);
-            $login = true;
-        }
+//Comprobamos que tiene al menos 3 carácteres
+if (strlen($username) < 3 or strlen($_POST["password"]) < 8) {
+    $error = '001x004';
+}
+
+if (!isset($error)) {
+    //Comprobamos que el nick o el email no existan
+    $sql = "SELECT id FROM `users` WHERE username = '".$username."'";
+    $sql2 = "SELECT id FROM `users` WHERE mail = '".$mail."'";
+    $query = $db->query($sql) or die($db->error);
+    $query2 = $db->query($sql2) or die($db->error);
+
+    if ($query->num_rows > 0) {
+        $error = "001x001";
+    } elseif ($query2->num_rows > 0) {
+        $error = "001x002";
+    } else {
+        $sql3 = "INSERT INTO `users` (username, mail, password, role) VALUES ('".$username."', '".$mail."', '".$password."', '0')";
+        $query3 = $db->query($sql3);
+        $login = true;
     }
+}
 
 ```
 
@@ -273,14 +273,14 @@ Cuando me enfrenté al reto de hacer una lista de usuarios que mostrara a todas 
 Lo primero que me pregunté es ¿Cómo puedo saber si alguien está o no conectado en un chat sin usar un servidor de chat? Lo que se me ocurrió es que cada vez que se actualizara algo en la página, se actualizara un campo en la base de datos *(last_online)* que contuviera un *time()*. De esa forma, si buscara en la base de datos las personas cuyo *last_time* fuera igual o menor al *time()* actual, con dos segundos se cortesía, sacaría una lista con personas conectadas.
 
 ```PHP
-            $time = time()-2;
+$time = time()-2;
 
-            $sql = "SELECT username FROM `users` 
-            WHERE current_room = '".$_SESSION['chatroom']."' 
-            AND username != '".$_SESSION["username"]."' 
-            AND last_online >= '".$time."' 
-            ORDER BY username ASC";
-            $query = $db->query($sql);
+$sql = "SELECT username FROM `users` 
+WHERE current_room = '".$_SESSION['chatroom']."' 
+AND username != '".$_SESSION["username"]."' 
+AND last_online >= '".$time."' 
+ORDER BY username ASC";
+$query = $db->query($sql);
 ```
 
 Lo siguiente fue preguntarme ¿Cómo actualizo constantemente el *last_online*? Lo que se me ocurrió fue una doble solución: Por un lado, actualizaría el *last_online* propio cada vez que se actualizara la página. También hice que el script actualizara automáticamente el last_online de los bots, y así me aseguraba de que siempre estuvieran conectados en las salas en las que aparecían.
@@ -297,38 +297,38 @@ if (!isset($_SESSION["username"])) {
 Por otro lado debia actualizar constantemente la lista de usuarios conectados que estaba mostrando. Para ello, efectivamente, tuve que usar JavaScript y crear un script que actualizara, cada segundo, el *div* donde estaba incluído el userlist con la página en PHP donde se mostraba la lista de usuarios.
 
 ```HTML
- <script>
-            $(document).ready(function() {
-                var refreshId =  setInterval( function(){
-                    $('#left_column').load('usrlist.php'); //Se actualiza el div
-                }, 1000 );
-            });
-        </script>
-        <div class="left_column" id="left_column">
+<script>
+    $(document).ready(function() {
+        var refreshId =  setInterval( function(){
+            $('#left_column').load('usrlist.php'); //Se actualiza el div
+        }, 1000 );
+    });
+</script>
+<div class="left_column" id="left_column">
 ```
 
 Con todo esto ya tenía una lista de usuarios que se actualizaba automáticamente y que además actualizaba mi propio estado a online. Hice que mostrara primero el usuario propio, y después el resto de usuarios. Ya sólo faltaba un detalle: mostrar un emoji en la lista si una persona eraun moderador de guardia, y otro emoji distinto si la persona era un bot:
 
 ```PHP
-            for ($i = 0; $resp = $query->fetch_array(); $i++) {
-                if ($i%2 == 0) {
-                    if (isInGuard($resp['username'])) {
-                        echo '<tr class="userlist_par"><td>🎖️'.$resp['username'].'</td></tr>';
-                    } elseif (isBot($resp['username'])) {
-                        echo '<tr class="userlist_par"><td>🎲'.$resp['username'].'</td></tr>';
-                    } else {
-                        echo '<tr class="userlist_par"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$resp['username'].'</td></tr>';
-                    }
-                } else {
-                    if (isInGuard($resp['username'])) {
-                        echo '<tr class="userlist_impar"><td>🎖️'.$resp['username'].'</td></tr>';
-                    } elseif (isBot($resp['username'])) {
-                        echo '<tr class="userlist_impar"><td>🎲'.$resp['username'].'</td></tr>';
-                    } else {
-                        echo '<tr class="userlist_impar"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$resp['username'].'</td></tr>';
-                    }
-                }
-            }
+for ($i = 0; $resp = $query->fetch_array(); $i++) {
+    if ($i%2 == 0) {
+        if (isInGuard($resp['username'])) {
+            echo '<tr class="userlist_par"><td>🎖️'.$resp['username'].'</td></tr>';
+        } elseif (isBot($resp['username'])) {
+            echo '<tr class="userlist_par"><td>🎲'.$resp['username'].'</td></tr>';
+        } else {
+            echo '<tr class="userlist_par"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$resp['username'].'</td></tr>';
+        }
+    } else {
+        if (isInGuard($resp['username'])) {
+            echo '<tr class="userlist_impar"><td>🎖️'.$resp['username'].'</td></tr>';
+        } elseif (isBot($resp['username'])) {
+            echo '<tr class="userlist_impar"><td>🎲'.$resp['username'].'</td></tr>';
+        } else {
+            echo '<tr class="userlist_impar"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$resp['username'].'</td></tr>';
+        }
+    }
+}
 ```
 
 ## Chat
@@ -389,36 +389,36 @@ if (isset($_POST["sendmsg"])) {
 La mecánica para que se actualizaran automáticamente los mensajes fue la misma que con la lista de usuarios, pero añadiendo una línea para que el *scroll* quedase siempre en la parte de abajo de ese cuadro (para que siguiera la lógica natural de un chat, que nos lleva a mirar justo encima de la barra de escritura de mensajes).
 
 ```HTML
-    <script>
-            $(document).ready(function() {
-                var refreshId =  setInterval( function(){
-                    $('#chat_box').load('chattag.php'); //Se actualiza el div
-                }, 1000 );
-            });
+<script>
+        $(document).ready(function() {
+            var refreshId =  setInterval( function(){
+                $('#chat_box').load('chattag.php'); //Se actualiza el div
+            }, 1000 );
+        });
 
-        var element = document.getElementById("chat_box");
-        element.scrollTop = element.scrollHeight;
-    </script>
-        <div class="chat_box" id="chat_box">
+    var element = document.getElementById("chat_box");
+    element.scrollTop = element.scrollHeight;
+</script>
+    <div class="chat_box" id="chat_box">
 ```
 
 Finalmente para mostrar los mensajes, se evalúan las *conditios*  y en base a eso se muestra de una forma u otra.
 
 ```PHP
-             $sql = "SELECT * FROM `chat` WHERE rid = '".getRoomInfo($_SESSION['chatroom'])['id']."' and date > '".getUserInfo($_SESSION["userid"])['last_chat_refresh']."' ORDER BY ID ASC"; //Añadir and date >= '".$time."'
-             $query = $db->query($sql);
+$sql = "SELECT * FROM `chat` WHERE rid = '".getRoomInfo($_SESSION['chatroom'])['id']."' and date > '".getUserInfo($_SESSION["userid"])['last_chat_refresh']."' ORDER BY ID ASC"; //Añadir and date >= '".$time."'
+$query = $db->query($sql);
 
-             while ($resp = $query->fetch_array()) {
-                if ($resp['conditions'] == 'normal') {
-                    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
-                } elseif (str_contains($resp['conditions'], 'public_bot')) {
-                    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎲&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
-                } elseif (str_contains($resp['conditions'], 'private_bot') and $resp['destiny'] == $_SESSION["username"]) {
-                    echo '<tr class="msg"><td><img src="/img/'.getUserInfo($resp["uid"])['username'].'.png" width="75" height="75" style="vertical-align: bottom" /><b><font color="#ff931c">'.getUserInfo($resp["uid"])['username'].'</font> te dice:</b>'.$resp["msg"].'</td></tr>';
-                } elseif (str_contains($resp['conditions'], 'guard_on')) {
-                    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎖️&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
-                }
-            } 
+while ($resp = $query->fetch_array()) {
+if ($resp['conditions'] == 'normal') {
+    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
+} elseif (str_contains($resp['conditions'], 'public_bot')) {
+    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎲&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
+} elseif (str_contains($resp['conditions'], 'private_bot') and $resp['destiny'] == $_SESSION["username"]) {
+    echo '<tr class="msg"><td><img src="/img/'.getUserInfo($resp["uid"])['username'].'.png" width="75" height="75" style="vertical-align: bottom" /><b><font color="#ff931c">'.getUserInfo($resp["uid"])['username'].'</font> te dice:</b>'.$resp["msg"].'</td></tr>';
+} elseif (str_contains($resp['conditions'], 'guard_on')) {
+    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎖️&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
+}
+} 
 ```
 
 En el código anterior puedes comprobar que se muestran solo los mensajes que se han publicado después del *time()* indicado en *last_chat_refresh* que es un campo en la tabla del usuario que indica, cuándo fue la última vez que se refrescó el chat. Ante eso es lógico preguntarse ¿Cuándo se actualiza el chat?
@@ -444,9 +444,9 @@ function chatRefresh($user = false) {
 La idea detrás de esto es que el chat fuera actualizado siempre que se actualizara la página completamente o se cambiara de sala, pero esto resultó en un problema, ya que los cambios en el [perfil](#perfil), la visibilización de los mensajes privados, o la apertura del panel de oficiales (estas dos últimas son futuras implementaciones), actualizaban la página, así que añadí la siguiente comprobación:
 
 ```PHP
-    if (!isset($_GET["view"]) and !isset($_GET["return"])) {
-        chatRefresh();
-    }
+if (!isset($_GET["view"]) and !isset($_GET["return"])) {
+    chatRefresh();
+}
 ```
 
 Si no existe una variable *view* del método *GET* (al abrir el perfil creamos en GET un view=profile, por ejemplo) y si tampoco existe la variable *return* del método *GET* (por ejemplo al pulsar el botón de volver en el perfil se crea en GET un return=), no se actualizaría el *last_chat_refresh*. En cualquier otro caso debe actualizarse. Esto funcionó bastante bien, ya que, a partir de ahora, solo se actualizaba el *last_chat_refresh* en el momento de entrada al chat, al entrar a una sala diferente o al ser movido de sala por un guardia. 
@@ -472,17 +472,17 @@ Inicié esta parte del proyecto creando la tabla en la base de datos que utiliza
 Una vez creada la lógica de chat, lo siguiente sería asociar a cada usuario a una sala. De inicio, y al loguearse en el ChatV1 se establece la sala de cada persona en el Lobby, lo cual deriva hacia lobby.php donde se debe seleccionar la sala a la que se quiere entrar.
 
 ```PHP
-        if ($password === $userinfo['password']) { //La contraseña es correctisima
-            //Actualizamos el last_online
-            updateLastOnline($username, time());
+if ($password === $userinfo['password']) { //La contraseña es correctisima
+    //Actualizamos el last_online
+    updateLastOnline($username, time());
 
-            //Creamos la variable de sesión
-            $_SESSION["username"] = $username;
-            $_SESSION["userid"] = $userinfo['id'];
-            $_SESSION["role"] = $userinfo['role'];
-            $_SESSION["chatroom"] = 'lobby';
-            header("Location: lobby.php");
-        }
+    //Creamos la variable de sesión
+    $_SESSION["username"] = $username;
+    $_SESSION["userid"] = $userinfo['id'];
+    $_SESSION["role"] = $userinfo['role'];
+    $_SESSION["chatroom"] = 'lobby';
+    header("Location: lobby.php");
+}
 ```
 
 ```PHP
@@ -532,19 +532,19 @@ Una vez dentro de cada sala se mostrarán únicamente en la lista de usuarios la
 Cada sala tiene su propio estilo css para que la experiencia en cada sala sea distinta.
 
 ```PHP
-        if (file_exists('css/room_styles/'.$_SESSION["chatroom"].'.css'))  {
-            echo '<link href="css/room_styles/'.$_SESSION["chatroom"].'.css" rel="stylesheet">';
-        } 
+if (file_exists('css/room_styles/'.$_SESSION["chatroom"].'.css'))  {
+    echo '<link href="css/room_styles/'.$_SESSION["chatroom"].'.css" rel="stylesheet">';
+} 
 ```
 
 Normalmente una persona puede moverse pulsando el botón de "Ir al Lobby", aunque, en las ocasiones en las que un guardia utiliza el comando */capturar* para mover a un usuario, éste perderá la capacidad de moverse de sala hasta que se le vuelva a mover con el comando */llevar*, esto lo veremos mejor en la sección de [comandos](#comandos).
 
 ```PHP
-                    if (getUserInfo($_SESSION["userid"])['can_move'] == 1) {
-                        echo '<p><input type="submit" name="lobby" value="Ir al Lobby" class="menu_button" /></p>';
-                    } else {
-                        echo '<p><input type="submit" name="lobby" value="Ir al Lobby" class="menu_button" disabled /></p>';
-                    }
+if (getUserInfo($_SESSION["userid"])['can_move'] == 1) {
+    echo '<p><input type="submit" name="lobby" value="Ir al Lobby" class="menu_button" /></p>';
+} else {
+    echo '<p><input type="submit" name="lobby" value="Ir al Lobby" class="menu_button" disabled /></p>';
+}
 ```
 
 Los guardias, como veremos de forma más específica en la sección de [rangos](#rangos) y [comandos](#comandos) tienen varios poderes para manejar dónde están los usuarios: en concreto los comandos */capturar* y */llevar*. Estos comandos lo que hacen es cambiar en la base de datos el campo *current_room* de alguien concreto en la tabla de usuarios.
