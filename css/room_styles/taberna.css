@@ -1,0 +1,28 @@
+html, body, article {
+    background-color: #fff;
+    background-image: url('../../img/rooms/taberna.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+.userlist_title {
+    color: #fff;
+}
+
+.chatname_title {
+    color: #fff;
+}
+
+.chat_box {
+    background-color: #dfe0f7c9;
+}
+
+.menu_case {
+    background-color: #dfe0f7c9;
+}
+
+.left_column {
+    background-color: #dfe0f7c9;
+}

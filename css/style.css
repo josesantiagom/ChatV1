@@ -1,0 +1,264 @@
+html, body, article {
+    background-color: #d1eef3;
+    color: #47485D;
+    font-size: 1vw;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+    font-size: 1.5vw;
+}
+
+a {
+    font-size: 0.7vw;
+    text-decoration: none;
+}
+
+.a2 {
+    font-size: 1vw;
+    text-decoration: none;
+    vertical-align: middle;
+    left: 5%;
+    text-align: right;
+}
+
+.a3 {
+    font-size: 1.5vw;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+section {
+    align-items: center;
+    vertical-align: middle;
+}
+
+input {
+    font-size: 1.5vw;
+    border-radius: 2%;
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+}
+
+textarea {
+    resize: none;
+}
+
+.login_title {
+    font-size: 3vw;
+    position: absolute;
+    top: 18vh;
+    left: 32vw;
+}
+
+.login_form {
+    height: 50vh;
+    font-size: 1.5vw;
+    background: #FFF;
+    position: absolute;
+    top: 5%;
+    left: 18%;
+}
+
+.cuadrado {
+    display: block;
+    width: 35vw;
+    height: 55vh;
+    background: #FFF;
+    border-radius: 2%;
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+    border: 1px solid #000; 
+    position: absolute;
+    top: 54vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+}
+
+.return_squad {
+    width: 99%;
+    height: 3%;
+    background: #d4d1d1da;
+    border: 1px solid #000; 
+    position: absolute;
+    align-self: center;
+}
+
+.alert {
+    width: 70vw;
+    height: 3vh;
+    background: #029743;
+    color: #FFF;
+    text-align: center;
+    border-radius: 4%;
+    border-top-left-radius: 4%;
+    border-top-right-radius: 4%;
+    border: 1px solid #000; 
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.error {
+    width: 70vw;
+    height: 3vh;
+    background: #a80a0a;
+    color: #FFF;
+    text-align: center;
+    border-radius: 4%;
+    border-top-left-radius: 4%;
+    border-top-right-radius: 4%;
+    border: 1px solid #000; 
+    position: absolute;
+    overflow:visible;
+    top: 15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.left_column {
+    display: inline-block;
+    width: 11vw;
+    height: 60vh;
+    background: #FFF;
+    border-radius: 2%;
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+    border: 1px solid #000; 
+    position: absolute;
+    overflow-y: scroll;
+    top: 16%;
+    left: 1.8%;
+    transform: translate(-10%, -10%);
+}
+
+.chat_box {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 87.3vw;
+    height: 77vh;
+    background: #FFF;
+    border: 1px solid #000; 
+    position: absolute;
+    overflow-y: auto;
+    top: 17.5%;
+    left: 21%;
+    transform: translate(-10%, -10%);
+}
+
+.panel_box {
+    display: block;
+    width: 87.3vw;
+    height: 77vh;
+    background: #dfe0f7c9;
+    border: 1px solid #000; 
+    position: absolute;
+    overflow-y: auto;
+    top: 17.5%;
+    left: 21%;
+    transform: translate(-10%, -10%);
+}
+
+.chat_case {
+    display: inline-block;
+    width: 87.3vw;
+    height: 4.3vh;
+    position: absolute;
+    top: 88.5%;
+    left: 21%;
+    transform: translate(-10%, -10%);
+}
+
+.menu_case {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 11vw;
+    height: 24vh;
+    background-color: #FFF;
+    align-items: center;
+    border: 1px solid #000; 
+    border-radius: 2%;
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+    position: absolute;
+    overflow-y: hidden;
+    top: 73%;
+    left: 1.8%;
+    transform: translate(-10%, -10%);
+}
+
+.userlist_title {
+    font-size: 1.5vw;
+    position: absolute;
+    top: 5vh;
+    left: 1vw;
+}
+
+.chatname_title {
+    font-size: 1.5vw;
+    position: absolute;
+    top: 5vh;
+    left: 12.5vw;
+}
+
+.myname {
+    display: block;
+    background: #029743;
+    color: #fff;
+    width: 9.5vmax;
+    transform: translate(1.5%, 1.5%);
+}
+
+.userlist_par {
+    display: block;
+    background: #161e90;
+    color: #fff;
+    width: 9.5vmax;
+    transform: translate(1.5%, 1.5%);
+}
+
+.userlist_impar {
+    display: block;
+    background: #931111;
+    color: #fff;
+    width: 9.5vmax;
+    transform: translate(1.5%, 1.5%);
+}
+
+.msg {
+    display: block;
+    color: #47485D;
+    font-size: 1.2em;
+    width: 84vmax;
+    transform: translate(1.5%, 1.5%);
+}
+
+.menu_button {
+    width: 10em;
+    height: 1.5em;
+    font-size: 1em;
+}
+
+.inputmsg {
+    font-size: 1.5vw;
+    size: 70%;
+    border-radius: 2%;
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+}
+
+.sendmsg {
+    font-size: 1.5vw;
+    size: 10%;
+    border-radius: 2%;
+    border-top-left-radius: 2%;
+    border-top-right-radius: 2%;
+}
+
+.imgcenter {
+  display: block;
+  text-align: center;
+  font-size: 2em;
+  color:#47485D;
+}
