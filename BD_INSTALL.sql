@@ -215,6 +215,30 @@ COMMIT;
 INSERT INTO `users` (`username`, `mail`, `password`, `role`, `last_online`, `last_chat_refresh`, `current_room`, `color`, `emoji`, `guard`, `bot`, `can_move`, `can_change_username`) VALUES
 ('GUARDIA', 'contacto@josesantiago.es', '66bf5f544b21ab11011507fb08232ecd', 4, 1693833637, 1693833356, 'Lobby', '196F3D', '😎', 0, 0, 1, 0);
 
+INSERT INTO `saludos` (`botid`, `msg`) VALUES
+(3, '¡Firmes! ¡Ha llegado {nick}!'),
+(3, '¡Saludos, {nick}! ¿Vienes a entrenar?'),
+(3, 'Hola {nick}, espero que hoy vengas con energía, porque este entrenamiento será muy duro.'),
+(3, '¿Qué tal {nick}? ¿Vienes a prepararte para la guerra?'),
+(4, 'Nunca olvido una cara, {nick} ¿Qué tal?'),
+(4, 'Que alegría verte de servicio, {nick}'),
+(4, 'Nos necesitan, {nick}. Haces una valiosa contribución a la guardia. Me alegra verte por aquí.'),
+(4, '¡Buenos días, {nick}!'),
+(5, '¡Qué alegría verte {nick}! Dime, ¿Tienes sed? ¿Qué puedo servirte?'),
+(5, 'Mirad quién ha vuelto a la taberna de Eva ¡Es {nick}!'),
+(5, '¡Hacía siglos que no sabía de ti, {nick}! ¿Qué tal todo?'),
+(5, '¡{Nick}! ¿Qué te trae por la taberna? Dime qué quieres beber.');
+
+INSERT INTO `config` (`name`, `str_content`, `int_content`) VALUES
+('author', 'Jose Santiago Muñoz', 0),
+('foot', 'Chat Bujendi V1.0 | Proyecto para protafolio personal', 0),
+('last_optimize', '', 1693661759),
+('maintenance', '', 0),
+('maintenance_subject', '', 0),
+('name', 'La Forja', 0),
+('private_botmsg_del', '', 7200),
+('subtitle', 'Un chat inspirado en los juegos de rol clásicos', 0);
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

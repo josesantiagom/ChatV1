@@ -1,7 +1,8 @@
 # ChatV1
 
 CHAT V1 - ESTILO LYCOS CHAT, COMPLETAMENTE EN PHP + MYSQL + JS
-Proyecto para el PORTAFOLIO
+Proyecto para el PORTAFOLIO de Jose Santiago
+[https://chatv1.josesantiago.es](https://chatv1.josesantiago.es)
 
 **INSTRUCCIONES DE INSTALACIÓN:**
  - La base de datos está en el archivo *BD_INSTALL.sql*
@@ -18,18 +19,21 @@ Inicio del proyecto: agosto 2023 | final del proyecto: septiembre 2023
 - [Chat](#chat)
 - [Salas](#salas)
 - [Bots](#bots)
+- [Perfil](#perfil)
+- [Rangos y comandos](#rangos-y-comandos)
+- [Datos de interés](#datos-de-interés)
 
 ## Introducción
-ChatV1 es un proyecto que nace de dos necesidades: la primera es la necesidad de añadir proyectos en el portafolio que puedan demostrar mis capacidades como programador PHP, y, la segunda, la necesidad de que este proyecto consistiera en sí un reto mental.
+ChatV1 es un proyecto que nace de dos necesidades: la primera, la de añadir proyectos en el portafolio que puedan demostrar mis capacidades como programador PHP; y, la segunda, la de que este proyecto consistiera en sí mismo, un reto mental.
 
 Esta idea está inspirada en el [Lycos/Yahoo Chat (En otros paises se llamaba WorldBiggestChat)](https://es.lycoschat.com/) que tuvo una gran popularidad entre el 2003 y el 2013. En resumidas cuentas, se trataba de un webchat programado en ASP (Active Server Pages) y basado en IRC (Internet Relay Chat) que tenía la particularidad de simular un barco (aunque de forma textual). En la actualidad ese chat sigue funcionando, y, aunque está muy cambiado, mantiene sus puntos más esenciales.
 
-El reto mental de este proyecto, que indica las condiciones en las que ha sido desarrollado son las siguientes:
-1. Solo se podrán usar los lenguajes HTML5, CSS3, PHP, y MySQL. Se permite JavaScript únicamente en lo estrictamente necesario.
-1. No se usará servidor de chat. Toda la arquitectura debe realizarse mediante querys MySQL, usando MySQLi.
-1. Todo lo que se pueda hacer en el chat debe hacerse en la misma ventana (para simplificar el proyecto, ya que hay otro proyecto para el portafolio que consiste en un CMS)
-1. No se pueden usar iframes, la misma página de chat debe controlar el flujo.
-1. Debe contener ciertos elementos de optimización automática de base de datos.
+El reto mental de este proyecto, que indica las condiciones en las que ha sido desarrollado, es el siguiente:
+1. Solo se pueden usar los lenguajes HTML5, CSS3, PHP, y MySQL. Se permite JavaScript únicamente en lo estrictamente necesario.
+1. No se usará servidor IRC ni de ningún otro tipo de chat. Toda la arquitectura debe realizarse mediante querys MySQL, usando MySQLi de PHP.
+1. Todo lo que se pueda hacer en el chat debe hacerse en la misma ventana (para simplificar el proyecto, ya que hay otro proyecto para el portafolio que consiste en un CMS).
+1. No se pueden usar iframes, la misma página de chat debe controlar el flujo (sí se pueden usar includes).
+1. Debe contener ciertos elementos de optimización automática de base de datos y autoregulación.
 
 La idea tras estas normas era que fuera un proceso verdaderamente desafiante del que pudiera aprender ciertos apectos del PHP más puro.
 
@@ -251,7 +255,7 @@ function getUserId($username) {
 
 Cuando me enfrenté al reto de hacer una lista de usuarios que mostrara a todas las personas online en tiempo real en un lenguaje como PHP, y, tras probar algunas ideas que no funcionaron, llegué a la conclusión de que iba a tener que usar Javascript.
 
-Lo primero que me pregunté es ¿Cómo puedo saber si alguien está o no conectado en un chat sin usar un servidor de chat? Lo que se me ocurrió es que cada vez que se actualizara algo en la página, se actualizara un campo en la base de datos *(last_online)* que contuviera un *time()*. De esa forma, si buscara en la base de datos las personas cuyo *last_time* fuera igual o menor al *time()* actual, con dos segundos se cortesía, sacaría una lista con personas conectadas.
+Lo primero que me pregunté es ¿Cómo puedo saber si alguien está o no conectado en un chat sin usar un servidor de chat? Lo que se me ocurrió es que cada vez que se actualizara algo en la página, se actualizara un campo en la base de datos *(last_online)* que contuviera un `time()`. De esa forma, si buscara en la base de datos las personas cuyo *last_time* fuera igual o menor al `time()` actual, con dos segundos se cortesía, sacaría una lista con personas conectadas.
 
 ```PHP
 $time = time()-2;
@@ -329,7 +333,7 @@ A la hora de crear la tabla en la base de datos de mensajes ideé los siguientes
     - *public_bot* es un mensaje público de un bot, que muestra el emoji del bot al lado del nombre.
     - *private_bot* indica que se trata de una alerta o de una respuesta privada de un bot. Es la forma en la que el chat informa de cualquier cosa (respuesta de comandos, por ejemplo).
     - *normal* el cual está siempre por defecto.
-- *date* indica la fecha en la que se envía el mensaje utilizando *time()*
+- *date* indica la fecha en la que se envía el mensaje utilizando `time()`
 - *destiny* que indica public si es un mensaje normal, o el nombre de usuario de la persona a la que se dirije en caso de ser una alerta o un mensaje privado de bot.
 
 Para evitar que la base de datos acomulara mensajes privados de bots, respuesta a comandos y ese tipo de mensajes temporales, programé un script muy sencillo que elimina los mensajes de esta índole después del tiempo (en segundos) establecido en la base de datos de configuración del chat Puedes obtener más información sobre esta base de datos en [datos de interés](#datos-de-interés).
@@ -402,7 +406,7 @@ if ($resp['conditions'] == 'normal') {
 } 
 ```
 
-En el código anterior puedes comprobar que se muestran solo los mensajes que se han publicado después del *time()* indicado en *last_chat_refresh* que es un campo en la tabla del usuario que indica, cuándo fue la última vez que se refrescó el chat. Ante eso es lógico preguntarse ¿Cuándo se actualiza el chat?
+En el código anterior puedes comprobar que se muestran solo los mensajes que se han publicado después del `time()` indicado en *last_chat_refresh* que es un campo en la tabla del usuario que indica, cuándo fue la última vez que se refrescó el chat. Ante eso es lógico preguntarse ¿Cuándo se actualiza el chat?
 
 Existe una función que permite actualizar el *last_chat_refresh* tanto de un usuario concreto como de la propia persona.
 
@@ -430,7 +434,7 @@ if (!isset($_GET["view"]) and !isset($_GET["return"])) {
 }
 ```
 
-Si no existe una variable *view* del método *GET* (al abrir el perfil creamos en GET un view=profile, por ejemplo) y si tampoco existe la variable *return* del método *GET* (por ejemplo al pulsar el botón de volver en el perfil se crea en GET un return=), no se actualizaría el *last_chat_refresh*. En cualquier otro caso debe actualizarse. Esto funcionó bastante bien, ya que, a partir de ahora, solo se actualizaba el *last_chat_refresh* en el momento de entrada al chat, al entrar a una sala diferente o al ser movido de sala por un guardia. 
+Si no existe una variable *view* del método *GET* (al abrir el perfil creamos en *GET* un `view=profile`, por ejemplo) y si tampoco existe la variable *return* del método *GET* (por ejemplo al pulsar el botón de volver en el perfil se crea en *GET* un `return=`), no se actualizaría el *last_chat_refresh*. En cualquier otro caso debe actualizarse. Esto funcionó bastante bien, ya que, a partir de ahora, solo se actualizaba el *last_chat_refresh* en el momento de entrada al chat, al entrar a una sala diferente o al ser movido de sala por un guardia. 
 
 De esta forma, a cada usuario se le mostraban únicamente los mensajes nuevos desde que entraba a una sala nueva.
 
@@ -482,7 +486,7 @@ $_SESSION["chatroom"] = "lobby";
 $sql = $db->query("UPDATE `users` SET current_room = 'lobby' WHERE id = '".$_SESSION["userid"]."'");
 ```
 
-Cuando se selecciona una sala en el Lobby se creaa una variable *GET* llamada *goroom*. Se comprueba que la sala exista y que haya permiso para entrar en ella. Si hay permiso se mueve a la sala, si no, se vuelve al Lobby y se muestra el motivo por el que no se puede acceder a la sala (gracias a la función *AllowedInRoom()* que hemos visto en el [sistema de usuarios](#sistema-de-usuarios))
+Cuando se selecciona una sala en el Lobby se creaa una variable *GET* llamada *goroom*. Se comprueba que la sala exista y que haya permiso para entrar en ella. Si hay permiso se mueve a la sala, si no, se vuelve al Lobby y se muestra el motivo por el que no se puede acceder a la sala (gracias a la función `AllowedInRoom()` que hemos visto en el [sistema de usuarios](#sistema-de-usuarios))
 
 ```PHP
 if (isset($_GET["goroom"])) {
@@ -980,4 +984,86 @@ case '/comandos':
 
     botPrivateMsg(3,getRoomInfo($_SESSION["chatroom"])['id'], '¡Hola '.$_SESSION["username"]."! Los comandos que puedes utilizar son:".$commandlist." ¡Espero haber sido de ayuda!",$_SESSION["username"]);
     break;
+```
+
+## Datos de interés
+
+Uno de los objetivos que tenía cuando inicié el proyecto es crear algo que, en la medida necesaria, fuera autoregulable y que guardara logs de una gran variedad de aspectos.
+
+Uno de los aspectos más relevantes es la configuración dinámica (que se guarde en la base de datos y que, por tanto, fuera configurable en la parte del panel de guardias dedicada a capitanes). La forma en la que la planteé se basaba en la existencia de dos tipos de datos distintos en las configuraciones: datos numéricos (int) y cadenas de texto (str). En base a eso diseñé una tabla en la base de datos con los siguientes campos:
+- *name*, que incluiría el nombre del campo
+- *str_content*, que incluiría el dato, siempre que fuera una cadena de texto
+- *int_content*, que incluiría el dato, siempre que fuera un dato numérico
+
+Para entender cómo funciona vamos a poner dos ejemplos: el nombre del chat, por ejemplo, y los segundos tras los que el sistema debe borrar las alertas privadas de bots de la base de datos. En el primero el dato que se tiene que configurar es una cadena de texto, el *name* de ese dato de configuración sería "La Forja", y esa cadena de texto aparece en *str_content*; en el segundo ejemplo, el dato es numérico, imagina que lo configuramos para se borre tras 7200 segundos, en ese caso en el *name* aparecería *private_botmsg_del* y en *int_content* aparecería 7200.
+
+Existe una función llamada `getConfig()` con la que podemos obtener algunos aspectos de la configuración que son demandados en el código. 
+
+```PHP
+// FUNCIÓN PARA OBTENER CIERTOS DATOS DE CONFIGURACIÓN QUE ESTÁN EN LA BASE DE DATOS
+function getConfig($type, $v) {
+    if ($type == "str") {
+        $dbq = $GLOBALS['db']->query("SELECT str_content FROM `config` WHERE name = '".$v."'") or die($GLOBALS['db']->error);
+        $dbr = $dbq->fetch_object();
+        $return = $dbr->str_content;
+        $error = false;
+    } elseif ($type == "int") {
+        $dbq = $GLOBALS['db']->query("SELECT int_content FROM `config` WHERE name = '".$v."'") or die($GLOBALS['db']->error);
+        $dbr = $dbq->fetch_object();
+        $return = $dbr->int_content;
+        $error = false;
+    } else {
+        $error = true;
+        return(false);
+    }
+
+    if (!$error) {
+        if ($dbq->num_rows > 0) {
+            return($return);
+        } else {
+            return(false);
+        }
+    }
+}
+```
+
+Esto está muy bien, pero vamos a ser prácticos... ¿Dónde se usa y para qué? El primer elemento de este tipo que desarrollé fue un pequeño script que optimizara las tablas de la base de datos cada cierto tiempo. Básicamente, en la table `config` se guarda una entrada con nombre *last_optimize* que incluye el `time()` de la última vez que se optimizó. Si han pasado 604800 segundos o más (es decir, una semana) desde el último *last_optimize* se ejecuta un `OPTIMIZE TABLE` en todas las tablas de la base de datos.
+
+```PHP
+// OPTIMIZACIÓN ATOMÁTICA DE LA BASE DE DATOS
+$actualTime = time();
+$last_optimize = getConfig('int', 'last_optimize');
+$next_optimize = $last_optimize + 604800;
+
+if ($actualTime >= $next_optimize) {
+    $sql = "OPTIMIZE TABLE `chat`, `config`, `logs`, `rooms`, `saludos`, `users`";
+    $db->query($sql) or die($db->error);
+    $sql2 = "UPDATE `config` SET int_content = '".$actualTime."' WHERE name = 'last_optimize'";
+    $db->query($sql2) or die($db->error);
+    addInLog("Root", "Se ha optimizado automáticamente la base de datos");
+}
+```
+
+Como ya habíamos mencionado anteriormente, esta función también se usa para borrar los mensajes de los bots después de cierto tiempo o para el título y el subtítulo del cha que aparecen en las etiquetas `<title>`.
+
+Existe también un log en el que se guardan ciertos aspectos como el uso de comandos, la optimización de la base de datos, y, cuando se implemente, el uso del panel de guardia. Se encuentra en la tabla `logs` de la base de datos y tiene la siguiente estructura:
+- *id*, como primary key identificativa de cada entrada.
+- *date*, donde se guarda un `time()` del momento del registro.
+- *ip* de la persona que ejecuta la acción guardada.
+- *who* con dos opciones:
+    - *Root* en el caso de acciones automatizadas como la optimización de la base de datos.
+    - El nombre de usaurio de la persona que realiza la acción, como por ejemplo, GUARDIA si ha activado el cambiar de nick a alguna persona.
+- *action* donde se explicita la acción, algunos ejemplos son "Se ha optimizado automáticamente la base de datos" o "Activa en el usuario con uid 3 el cambio de nombre".
+
+Estos registros se añaden mediante la función `addInLog()`
+
+```PHP
+// FUNCIÓN QUE AÑADE UNA ENTRADA AL LOG DE LA BASE DE DATOS
+function addInLog($who, $action) {
+    $date = time();
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $sql = "INSERT INTO `logs` (date, ip, who, action) VALUES('".$date."', '".$ip."', '".$who."', '".$action."')";
+
+    $inserting = $GLOBALS['db']->query($sql) or die($GLOBALS['db']->error);
+}
 ```

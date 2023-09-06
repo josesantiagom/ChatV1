@@ -31,7 +31,7 @@ $last_optimize = getConfig('int', 'last_optimize');
 $next_optimize = $last_optimize + 604800;
 
 if ($actualTime >= $next_optimize) {
-    $sql = "OPTIMIZE TABLE `config`, `users`, `logs`";
+    $sql = "OPTIMIZE TABLE `chat`, `config`, `logs`, `rooms`, `saludos`, `users`";
     $db->query($sql) or die($db->error);
     $sql2 = "UPDATE `config` SET int_content = '".$actualTime."' WHERE name = 'last_optimize'";
     $db->query($sql2) or die($db->error);
@@ -194,6 +194,20 @@ function isNewbie($userid) {
     }
 }
 
+
+//FUNCIÓN PARA COMPROBAR SI UN USUARIO ES VIP
+function isVip($userid) {
+    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
+    $query = $GLOBALS['db']->query($sql);
+    $resp = $query->fetch_array();
+
+    if ($resp['role'] > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 //FUNCIÓN PARA COMPROBAR SI UN USUARIO ES GUARDIA
 function isGuard($userid) {
     $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
@@ -227,19 +241,6 @@ function isCaptain($userid) {
     $resp = $query->fetch_array();
 
     if ($resp['role'] > 3) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-//FUNCIÓN PARA COMPROBAR SI UN SUUARIO ES GENERAL
-function isGeneral($userid) {
-    $sql = "SELECT role FROM `users` WHERE id = '".$userid."'";
-    $query = $GLOBALS['db']->query($sql);
-    $resp = $query->fetch_array();
-
-    if ($resp['role'] > 4) {
         return true;
     } else {
         return false;
