@@ -41,7 +41,7 @@ Aunque de algunos de los campos de la base de datos hablaremos más adelante (*l
 
 El registro es un sistema muy sencillo en el que se comprueba que el nombre de usuario tenga, al menos, 3 carácteres y la contraseña 8; y ue no contenga carácteres prohibidos. También se comprueba que el usuario no existiera con anterioridad.
 
-```
+```php
     $username = htmlentities($_POST["username"]);
     $password = md5(htmlentities($_POST["password"]));
     $mail = htmlentities($_POST["mail"]);
@@ -84,7 +84,7 @@ El registro es un sistema muy sencillo en el que se comprueba que el nombre de u
 
 Durante el Login se coteja en la base de datos y se comprueba que el nick y la contraseña coincidan con lo establecido. En el caso de que así sea se establecen algunas variables de sesión.
 
-```
+```php
 if (isset($_POST["login"])) {
     $username = htmlentities($_POST["username"]);
     $password = md5(htmlentities($_POST["password"]));
@@ -115,7 +115,7 @@ if (isset($_POST["login"])) {
 
 Hay algunas funciones relacionadas con el sistema de usuarios que son utilizadas en diversos lugares de la aplicación para tareas muy variadas.
 
-```
+```php
 //FUNCIÓN PARA COMPROBAR SI UN USUARIO EXISTE
 function userExists($username) {
     $sql = "SELECT count(id) FROM `users` WHERE username = '".$username."'";
