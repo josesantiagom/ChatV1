@@ -7,14 +7,14 @@ Autor: Jose Santiago Muñoz
 Inicio del proyecto: agosto 2023, final del proyecto: septiembre 2023
 
 ## Índice
-- [Introducción] (#introducción)
-- [Sistema de usuarios] (#sistema-de-usuarios)
-- [Chat] (#chat)
+- [Introducción](#introducción)
+- [Sistema de usuarios](#sistema-de-usuarios)
+- [Chat](#chat)
 
 ## Introducción
 ChatV1 es un proyecto que nace de dos necesidades: la primera es la necesidad de añadir proyectos en el portafolio que puedan demostrar mis capacidades como programador PHP, y, la segunda, la necesidad de que este proyecto consistiera en sí un reto mental.
 
-Esta idea está inspirada en el [Lycos/Yahoo Chat (En otros paises se llamaba WorldBiggestChat)] (https://es.lycoschat.com/) que tuvo una gran popularidad entre el 2003 y el 2013. En resumidas cuentas, se trataba de un webchat programado en ASP (Active Server Pages) y basado en IRC (Internet Relay Chat) que tenía la particularidad de simular un barco (aunque de forma textual). En la actualidad ese chat sigue funcionando, y, aunque está muy cambiado, mantiene sus puntos más esenciales.
+Esta idea está inspirada en el [Lycos/Yahoo Chat (En otros paises se llamaba WorldBiggestChat)](https://es.lycoschat.com/) que tuvo una gran popularidad entre el 2003 y el 2013. En resumidas cuentas, se trataba de un webchat programado en ASP (Active Server Pages) y basado en IRC (Internet Relay Chat) que tenía la particularidad de simular un barco (aunque de forma textual). En la actualidad ese chat sigue funcionando, y, aunque está muy cambiado, mantiene sus puntos más esenciales.
 
 El reto mental de este proyecto, que indica las condiciones en las que ha sido desarrollado son las siguientes:
 1. Solo se podrán usar los lenguajes HTML5, CSS3, PHP, y MySQL. Se permite JavaScript únicamente en lo estrictamente necesario.
@@ -27,18 +27,18 @@ La idea tras estas normas era que fuera un proceso verdaderamente desafiante del
 
 ## Sistema de Usuarios
 
-Existe tanto un [login] (https://chatv1.josesantiago.es/login.php) como un [registro de usuarios] (https://chatv1.josesantiago.es/register.php).
+Existe tanto un [login](https://chatv1.josesantiago.es/login.php) como un [registro de usuarios](https://chatv1.josesantiago.es/register.php).
 
 Aunque de algunos de los campos de la base de datos hablaremos más adelante (*last_chat_refresh, current_room, color, o emoji* cuando hablemos del chat, *can_move* cuando hablemos de rangos y *can_change_username* cuando hablemos del perfil). Vamos a explicar algunos de los aspectos más importantes de este sistema de usuarios:
 
 - *id* es la clave primaria de identificación de cada usuario.
 - *username, mail* y *password* corresponden a los datos de acceso e identificación.
-- *role* y *guard* son campos que indican el rango de la persona y si está o no de guardia. Ver [lista de conectados] (#lista-de-conectados) y [rangos] (#rangos).
-- *color* y *emoji* están relacionados con cómo se muestran nuestros mensjaes. Ver [chat] (#chat).
-- *last_online* y *last_chat_refresh* son campos que sirven para mostrar la lista de personas online y los mensajes desde el momento en que entramos al chat. Ver [lista de conectados] (#lista-de-conectados) y [chat] (#chat)
-- *current_room* indica la sala donde se está chateando. Ver [chat] (#chat)
-- *bot* sirve para marcar a los bots en la lista de usuarios. Ver (lista de conectados) [#lista-de-conectados].
-- *can_change_username* será verdadero si el usuario tiene permitido cambiar su nick. Ver (perfil) [#perfil].
+- *role* y *guard* son campos que indican el rango de la persona y si está o no de guardia. Ver [lista de conectados](#lista-de-conectados) y [rangos](#rangos).
+- *color* y *emoji* están relacionados con cómo se muestran nuestros mensjaes. Ver [chat](#chat).
+- *last_online* y *last_chat_refresh* son campos que sirven para mostrar la lista de personas online y los mensajes desde el momento en que entramos al chat. Ver [lista de conectados](#lista-de-conectados) y [chat](#chat)
+- *current_room* indica la sala donde se está chateando. Ver [chat](#chat)
+- *bot* sirve para marcar a los bots en la lista de usuarios. Ver (lista de conectados)[#lista-de-conectados].
+- *can_change_username* será verdadero si el usuario tiene permitido cambiar su nick. Ver (perfil)[#perfil].
 
 El registro es un sistema muy sencillo en el que se comprueba que el nombre de usuario tenga, al menos, 3 carácteres y la contraseña 8; y ue no contenga carácteres prohibidos. También se comprueba que el usuario no existiera con anterioridad.
 
@@ -335,7 +335,7 @@ Con todo esto ya tenía una lista de usuarios que se actualizaba automáticament
 A la hora de imaginar cómo iba a abordar el chat propiamente dicho lo dividí en dos funcionalidades distintas que tenía que idear y programar:
 
 - Por una parte, el **envío de mensajes**.
-- Por otra, la **muestra de mensajes en el cuadro de chat**. Esta última parte requería, igual que en la lista de usuarios, que se actualizara automáticamente. Además, debía tener en cuenta el color y el emoji escogidos en el [perfil] (#perfil), mostrar el icono de bots y personas que escriben estando de guardia. Además, debían mostrarse allí a las alertas privadas de bots (respuestas a un comando, o alertas enviadaspor un guardia).
+- Por otra, la **muestra de mensajes en el cuadro de chat**. Esta última parte requería, igual que en la lista de usuarios, que se actualizara automáticamente. Además, debía tener en cuenta el color y el emoji escogidos en el [perfil](#perfil), mostrar el icono de bots y personas que escriben estando de guardia. Además, debían mostrarse allí a las alertas privadas de bots (respuestas a un comando, o alertas enviadaspor un guardia).
 
 A la hora de crear la tabla en la base de datos de mensajes ideé los siguientes campos:
 - *id* como identificador y clave primaria que identifica cada mensaje.
@@ -350,7 +350,7 @@ A la hora de crear la tabla en la base de datos de mensajes ideé los siguientes
 - *date* indica la fecha en la que se envía el mensaje utilizando *time()*
 - *destiny* que indica public si es un mensaje normal, o el nombre de usuario de la persona a la que se dirije en caso de ser una alerta o un mensaje privado de bot.
 
-Para evitar que la base de datos acomulara mensajes privados de bots, respuesta a comandos y ese tipo de mensajes temporales, programé un script muy sencillo que elimina los mensajes de esta índole después del tiempo (en segundos) establecido en la base de datos de configuración del chat Puedes obtener más información sobre esta base de datos en [datos de interés] (#datos-de-interés).
+Para evitar que la base de datos acomulara mensajes privados de bots, respuesta a comandos y ese tipo de mensajes temporales, programé un script muy sencillo que elimina los mensajes de esta índole después del tiempo (en segundos) establecido en la base de datos de configuración del chat Puedes obtener más información sobre esta base de datos en [datos de interés](#datos-de-interés).
 
 ```PHP
 //Borrado de los mensajes private_bot que pasaran el tiempo estimado en la base de datos
