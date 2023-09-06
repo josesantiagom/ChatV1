@@ -48,7 +48,7 @@ if (isset($_POST["register"])) {
     } 
     
     //Comprobamos que tiene al menos 3 carácteres
-    if (strlen($username) < 3) {
+    if (strlen($username) < 3 or strlen($_POST["password"]) < 8) {
         $error = '001x004';
     }
     
