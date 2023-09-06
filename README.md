@@ -2,7 +2,7 @@
 
 CHAT V1 - ESTILO LYCOS CHAT, COMPLETAMENTE EN PHP + MYSQL + JS
 Proyecto para el PORTAFOLIO de Jose Santiago
-[https://chatv1.josesantiago.es](https://chatv1.josesantiago.es)
+[http://chatv1.josesantiago.es](http://chatv1.josesantiago.es)
 
 **INSTRUCCIONES DE INSTALACIÓN:**
  - La base de datos está en el archivo *BD_INSTALL.sql*
@@ -39,7 +39,7 @@ La idea tras estas normas era que fuera un proceso verdaderamente desafiante del
 
 ## Sistema de Usuarios
 
-Existe tanto un [login](https://chatv1.josesantiago.es/login.php) como un [registro de usuarios](https://chatv1.josesantiago.es/register.php).
+Existe tanto un [login](http://chatv1.josesantiago.es/login.php) como un [registro de usuarios](http://chatv1.josesantiago.es/register.php).
 
 Aunque de algunos de los campos de la base de datos hablaremos más adelante (*last_chat_refresh, current_room, color, o emoji* cuando hablemos del chat, *can_move* cuando hablemos de rangos y *can_change_username* cuando hablemos del perfil). Vamos a explicar algunos de los aspectos más importantes de este sistema de usuarios:
 
