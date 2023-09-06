@@ -574,7 +574,9 @@ Los bots eran uno de los aspectos más característicos del chat de Lycos en el 
 - Eran la forma en la que el chat te daba feedback de lo que hacías: como respuesta a los comandos, como saludo, si recibías un mensaje privado, etc.
 - Era la forma en la que un moderador te podía alertar de algo.
 
-La idea era retomar ese parte del chat y programarla en PHP. Comencé creando los bots como usuarios normales, están en la base de datos de usuario (tal y como hemos visto en el [sistema de usuarios](#sistema-de-usuarios) tienen un valor 1 en el campo bot), cuando se actualiza el last_online de una persona se actualiza también el last_online de un bot. De esa forma, siempre aparecen conectados en la sala en la que deberían estar.
+La idea era retomar ese parte del chat y programarla en PHP. Comencé creando los bots como usuarios en la tabla `users` (y tal y como hemos visto en el [sistema de usuarios](#sistema-de-usuarios) tienen un valor 1 en el campo bot). 
+
+Cuando se actualiza el last_online de una persona se actualiza también el last_online de un bot. De esa forma, siempre aparecen conectados en la sala en la que deberían estar.
 
 Cuando alguien entra a una sala, el bot de la sala suele enviar uno de sus varios saludos característicos.
 
