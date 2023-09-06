@@ -6,9 +6,10 @@ Proyecto para el PORTAFOLIO
 Autor: Jose Santiago Muñoz
 Inicio del proyecto: agosto 2023, final del proyecto: septiembre 2023
 
-##Índice
+## Índice
 - [Introducción] (#introducción)
 - [Sistema de usuarios] (#sistema-de-usuarios)
+- [Chat] (#chat)
 
 ## Introducción
 ChatV1 es un proyecto que nace de dos necesidades: la primera es la necesidad de añadir proyectos en el portafolio que puedan demostrar mis capacidades como programador PHP, y, la segunda, la necesidad de que este proyecto consistiera en sí un reto mental.
@@ -261,4 +262,161 @@ function getUserId($username) {
 
     return $roominfo[0];
 }
+```
+
+
+## Lista de Conectados
+
+Cuando me enfrenté al reto de hacer una lista de usuarios que mostrara a todas las personas online en tiempo real en un lenguaje como PHP, y, tras probar algunas ideas que no funcionaron, llegué a la conclusión de que iba a tener que usar Javascript.
+
+Lo primero que me pregunté es ¿Cómo puedo saber si alguien está o no conectado en un chat sin usar un servidor de chat? Lo que se me ocurrió es que cada vez que se actualizara algo en la página, se actualizara un campo en la base de datos *(last_online)* que contuviera un *time()*. De esa forma, si buscara en la base de datos las personas cuyo *last_time* fuera igual o menor al *time()* actual, con dos segundos se cortesía, sacaría una lista con personas conectadas.
+
+```PHP
+            $time = time()-2;
+
+            $sql = "SELECT username FROM `users` 
+            WHERE current_room = '".$_SESSION['chatroom']."' 
+            AND username != '".$_SESSION["username"]."' 
+            AND last_online >= '".$time."' 
+            ORDER BY username ASC";
+            $query = $db->query($sql);
+```
+
+Lo siguiente fue preguntarme ¿Cómo actualizo constantemente el *last_online*? Lo que se me ocurrió fue una doble solución: Por un lado, actualizaría el *last_online* propio cada vez que se actualizara la página. También hice que el script actualizara automáticamente el last_online de los bots, y así me aseguraba de que siempre estuvieran conectados en las salas en las que aparecían.
+
+```PHP
+if (!isset($_SESSION["username"])) {
+    echo '<script type="text/JavaScript"> location.assign("login.php"); </script>';
+} else {
+    updateLastOnline($_SESSION["username"], time());
+    updateLastOnline("_bots", time());
+}
+```
+
+Por otro lado debia actualizar constantemente la lista de usuarios conectados que estaba mostrando. Para ello, efectivamente, tuve que usar JavaScript y crear un script que actualizara, cada segundo, el *div* donde estaba incluído el userlist con la página en PHP donde se mostraba la lista de usuarios.
+
+```HTML
+ <script>
+            $(document).ready(function() {
+                var refreshId =  setInterval( function(){
+                    $('#left_column').load('usrlist.php'); //Se actualiza el div
+                }, 1000 );
+            });
+        </script>
+        <div class="left_column" id="left_column">
+```
+
+Con todo esto ya tenía una lista de usuarios que se actualizaba automáticamente y que además actualizaba mi propio estado a online. Hice que mostrara primero el usuario propio, y después el resto de usuarios. Ya sólo faltaba un detalle: mostrar un emoji en la lista si una persona eraun moderador de guardia, y otro emoji distinto si la persona era un bot:
+
+```PHP
+            for ($i = 0; $resp = $query->fetch_array(); $i++) {
+                if ($i%2 == 0) {
+                    if (isInGuard($resp['username'])) {
+                        echo '<tr class="userlist_par"><td>🎖️'.$resp['username'].'</td></tr>';
+                    } elseif (isBot($resp['username'])) {
+                        echo '<tr class="userlist_par"><td>🎲'.$resp['username'].'</td></tr>';
+                    } else {
+                        echo '<tr class="userlist_par"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$resp['username'].'</td></tr>';
+                    }
+                } else {
+                    if (isInGuard($resp['username'])) {
+                        echo '<tr class="userlist_impar"><td>🎖️'.$resp['username'].'</td></tr>';
+                    } elseif (isBot($resp['username'])) {
+                        echo '<tr class="userlist_impar"><td>🎲'.$resp['username'].'</td></tr>';
+                    } else {
+                        echo '<tr class="userlist_impar"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$resp['username'].'</td></tr>';
+                    }
+                }
+            }
+```
+
+## Chat
+
+A la hora de imaginar cómo iba a abordar el chat propiamente dicho lo dividí en dos funcionalidades distintas que tenía que idear y programar:
+
+- Por una parte, el **envío de mensajes**.
+- Por otra, la **muestra de mensajes en el cuadro de chat**. Esta última parte requería, igual que en la lista de usuarios, que se actualizara automáticamente. Además, debía tener en cuenta el color y el emoji escogidos en el [perfil] (#perfil), mostrar el icono de bots y personas que escriben estando de guardia. Además, debían mostrarse allí a las alertas privadas de bots (respuestas a un comando, o alertas enviadaspor un guardia).
+
+A la hora de crear la tabla en la base de datos de mensajes ideé los siguientes campos:
+- *id* como identificador y clave primaria que identifica cada mensaje.
+- *uid* como id de usuario. Clave foránea que se corresponde con la id del usuario que manda el mensaje.
+- *rid* como id de sala. Clave foránea que se corresponde con la id de la sala en la que se tiene que mostrar este mensaje.
+- *msg* que es el texto del mensaje propiamente dicho.
+- *conditions* es la decisión que tomé para distinguir el tipo de mensaje que era, y, por tanto, cómo se debía ver. Lo dejé como un *varchar* que tuviera los elementos, separados por puntos y comas, que identificaran la naturaleza del mensaje. Entre las opciones que se tendrán en cuenta en el programa están:
+    - *guard_on* indica que el mensaje se ha enviado por un moderador con el estado de guardia, y debe mostrar un emoji específico al lado del nombre.
+    - *public_bot* es un mensaje público de un bot, que muestra el emoji del bot al lado del nombre.
+    - *private_bot* indica que se trata de una alerta o de una respuesta privada de un bot. Es la forma en la que el chat informa de cualquier cosa (respuesta de comandos, por ejemplo).
+    - *normal* el cual está siempre por defecto.
+- *date* indica la fecha en la que se envía el mensaje utilizando *time()*
+- *destiny* que indica public si es un mensaje normal, o el nombre de usuario de la persona a la que se dirije en caso de ser una alerta o un mensaje privado de bot.
+
+Para evitar que la base de datos acomulara mensajes privados de bots, respuesta a comandos y ese tipo de mensajes temporales, programé un script muy sencillo que elimina los mensajes de esta índole después del tiempo (en segundos) establecido en la base de datos de configuración del chat Puedes obtener más información sobre esta base de datos en [datos de interés] (#datos-de-interés).
+
+```PHP
+//Borrado de los mensajes private_bot que pasaran el tiempo estimado en la base de datos
+$seconds = getConfig('int','private_botmsg_del');
+$query = $db->query("DELETE FROM `chat` WHERE conditions = 'private_bot' and date <= '".time()-$seconds."'");
+```
+
+A la hora de enviar mensajes la lógica es muy sencilla. Se comprueba que el mensaje no esté vacío, y si no lo está, se comprueba que no sea un comando. Si ambas condiciones son falsas, se comprueba si la persona está de guardia (para saber si tiene esa *condition*) y luego se introduce ese mensaje en la base de datos.
+
+```PHP
+if (isset($_POST["sendmsg"])) {
+    $msg = htmlentities($_POST["msg"]);
+
+    if (isCommand($_POST["msg"])) {
+        executeCommand($msg);
+    } else {
+        if (!empty($msg) or $msg != "") {
+            $uid = $_SESSION["userid"];
+            $rid = getRoomInfo($_SESSION["chatroom"])["id"];
+            $conditions = 'normal';
+            $date = time();
+            $destiny = 'public';
+        
+            if (isInGuard($_SESSION["username"])) {
+                $conditions .= ';guard_on';
+            }
+
+            $insertinto = $db->query("INSERT INTO `chat` (uid, rid, msg, conditions, date, destiny)
+                                      VALUES('".$uid."', '".$rid."', '".$msg."', '".$conditions."', '".$date."', '".$destiny."')");
+        }
+    }
+}
+```
+
+La mecánica para que se actualizaran automáticamente los mensajes fue la misma que con la lista de usuarios, pero añadiendo una línea para que el *scroll* quedase siempre en la parte de abajo de ese cuadro (para que siguiera la lógica natural de un chat, que nos lleva a mirar justo encima de la barra de escritura de mensajes).
+
+```HTML
+    <script>
+            $(document).ready(function() {
+                var refreshId =  setInterval( function(){
+                    $('#chat_box').load('chattag.php'); //Se actualiza el div
+                }, 1000 );
+            });
+
+        var element = document.getElementById("chat_box");
+        element.scrollTop = element.scrollHeight;
+    </script>
+        <div class="chat_box" id="chat_box">
+```
+
+Finalmente para mostrar los mensajes, se evalúan las *conditios*  y en base a eso se muestra de una forma u otra.
+
+```PHP
+$sql = "SELECT * FROM `chat` WHERE rid = '".getRoomInfo($_SESSION['chatroom'])['id']."' and date > '".getUserInfo($_SESSION["userid"])['last_chat_refresh']."' ORDER BY ID ASC"; //Añadir and date >= '".$time."'
+             $query = $db->query($sql);
+
+             while ($resp = $query->fetch_array()) {
+                if ($resp['conditions'] == 'normal') {
+                    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
+                } elseif (str_contains($resp['conditions'], 'public_bot')) {
+                    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎲&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
+                } elseif (str_contains($resp['conditions'], 'private_bot') and $resp['destiny'] == $_SESSION["username"]) {
+                    echo '<tr class="msg"><td><img src="/img/'.getUserInfo($resp["uid"])['username'].'.png" width="75" height="75" style="vertical-align: bottom" /><b><font color="#ff931c">'.getUserInfo($resp["uid"])['username'].'</font> te dice:</b>'.$resp["msg"].'</td></tr>';
+                } elseif (str_contains($resp['conditions'], 'guard_on')) {
+                    echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎖️&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
+                }
+            } 
+            ?>
 ```
