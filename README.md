@@ -3,6 +3,11 @@
 CHAT V1 - ESTILO LYCOS CHAT, COMPLETAMENTE EN PHP + MYSQL + JS
 Proyecto para el PORTAFOLIO
 
+**INSTRUCCIONES DE INSTALACIÓN:**
+ - La base de datos está en el archivo *BD_INSTALL.sql*
+ - En *config.php* encuentras las variables para conectar con la base de datos.
+ - El usuario con acceso de administrador por defecto tiene el username **GUARDIA** y la passsword **$%Fsjs$68**
+
 Autor: Jose Santiago Muñoz
 Inicio del proyecto: agosto 2023, final del proyecto: septiembre 2023
 
