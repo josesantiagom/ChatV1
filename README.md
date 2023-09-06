@@ -10,6 +10,7 @@ Inicio del proyecto: agosto 2023, final del proyecto: septiembre 2023
 - [Introducción](#introducción)
 - [Sistema de usuarios](#sistema-de-usuarios)
 - [Chat](#chat)
+- [Salas](#salas)
 
 ## Introducción
 ChatV1 es un proyecto que nace de dos necesidades: la primera es la necesidad de añadir proyectos en el portafolio que puedan demostrar mis capacidades como programador PHP, y, la segunda, la necesidad de que este proyecto consistiera en sí un reto mental.
@@ -404,7 +405,7 @@ La mecánica para que se actualizaran automáticamente los mensajes fue la misma
 Finalmente para mostrar los mensajes, se evalúan las *conditios*  y en base a eso se muestra de una forma u otra.
 
 ```PHP
-$sql = "SELECT * FROM `chat` WHERE rid = '".getRoomInfo($_SESSION['chatroom'])['id']."' and date > '".getUserInfo($_SESSION["userid"])['last_chat_refresh']."' ORDER BY ID ASC"; //Añadir and date >= '".$time."'
+             $sql = "SELECT * FROM `chat` WHERE rid = '".getRoomInfo($_SESSION['chatroom'])['id']."' and date > '".getUserInfo($_SESSION["userid"])['last_chat_refresh']."' ORDER BY ID ASC"; //Añadir and date >= '".$time."'
              $query = $db->query($sql);
 
              while ($resp = $query->fetch_array()) {
@@ -418,5 +419,147 @@ $sql = "SELECT * FROM `chat` WHERE rid = '".getRoomInfo($_SESSION['chatroom'])['
                     echo '<tr class="msg"><td>'.date("H:i", $resp['date'])."<font color=#".getUserInfo($resp["uid"])['color']."><b>🎖️&#60;".getUserInfo($resp["uid"])['emoji']."".getUserInfo($resp["uid"])['username']."&#62;</b></font>: ".$resp["msg"].'</td></tr>';
                 }
             } 
-            ?>
+```
+
+En el código anterior puedes comprobar que se muestran solo los mensajes que se han publicado después del *time()* indicado en *last_chat_refresh* que es un campo en la tabla del usuario que indica, cuándo fue la última vez que se refrescó el chat. Ante eso es lógico preguntarse ¿Cuándo se actualiza el chat?
+
+Existe una función que permite actualizar el *last_chat_refresh* tanto de un usuario concreto como de la propia persona.
+
+```PHP
+//FUNCIÓN PARA ACTUALIZAR LA LISTA DE MENSAJES QUE VISUALIZA UN USUARIO
+function chatRefresh($user = false) {
+    $time = time();
+
+    if ($user) {
+        $sql = "UPDATE `users` SET last_chat_refresh = '".$time."' WHERE username = '".$user."'";
+    } else {
+        $sql = "UPDATE `users` SET last_chat_refresh = '".$time."' WHERE username = '".$_SESSION["username"]."'";
+    }
+
+    $query = $GLOBALS['db']->query($sql);
+    return true;
+}
+```
+
+La idea detrás de esto es que el chat fuera actualizado siempre que se actualizara la página completamente o se cambiara de sala, pero esto resultó en un problema, ya que los cambios en el [perfil](#perfil), la visibilización de los mensajes privados, o la apertura del panel de oficiales (estas dos últimas son futuras implementaciones), actualizaban la página, así que añadí la siguiente comprobación:
+
+```PHP
+    if (!isset($_GET["view"]) and !isset($_GET["return"])) {
+        chatRefresh();
+    }
+```
+
+Si no existe una variable *view* del método *GET* (al abrir el perfil creamos en GET un view=profile, por ejemplo) y si tampoco existe la variable *return* del método *GET* (por ejemplo al pulsar el botón de volver en el perfil se crea en GET un return=), no se actualizaría el *last_chat_refresh*. En cualquier otro caso debe actualizarse. Esto funcionó bastante bien, ya que, a partir de ahora, solo se actualizaba el *last_chat_refresh* en el momento de entrada al chat, al entrar a una sala diferente o al ser movido de sala por un guardia. 
+
+De esta forma, a cada usuario se le mostraban únicamente los mensajes nuevos desde que entraba a una sala nueva.
+
+## Salas
+
+Quería que hubiera varias salas donde poder hablar de varios temas, salas, además, que pudieran tener ciertos requisitos (salas para guardias, salas para capitanes) e incluso salas de calabozo (donde solo pueden entrar guardias, pero que sean el destino al que se mueve a las personas que rompen las reglas).
+
+Inicié esta parte del proyecto creando la tabla en la base de datos que utilizaría para las salas y que tenía las siguientes filas:
+- *id* como clave primaria, que sería el número identificador único de cada una de las salas.
+- *orden* que es básicamente el orden en el que aparecen en el lobby.
+- *name* es el nombre que aparece en la página de chat y en el lobby.
+- *shortname* donde iría el nombre acortado de cada sala que es el que se usa en los comandos.
+- *conditions* como en el caso de los chats, indica, separado por puntos y coma, las limitaciones o especificidades de cada sala. En este caso, se usa las siguientes conditions:
+    - *movable*, que implica que se puede mover a usuarios a esa sala.
+    - *no_movable*, que indica lo contrario a la anterior.
+    - *only_newbies*, para novatos, es decir, personas que han mandado menos de 100 mensajes (los guardias se saltan esta limitación).
+    - *only_mods*, que implica que es una sala de acceso únicamente a guardias.
+    - *only_captains*, que implica que es una sala de acceso únicamente permitido a capitanes.
+
+Una vez creada la lógica de chat, lo siguiente sería asociar a cada usuario a una sala. De inicio, y al loguearse en el ChatV1 se establece la sala de cada persona en el Lobby, lo cual deriva hacia lobby.php donde se debe seleccionar la sala a la que se quiere entrar.
+
+```PHP
+        if ($password === $userinfo['password']) { //La contraseña es correctisima
+            //Actualizamos el last_online
+            updateLastOnline($username, time());
+
+            //Creamos la variable de sesión
+            $_SESSION["username"] = $username;
+            $_SESSION["userid"] = $userinfo['id'];
+            $_SESSION["role"] = $userinfo['role'];
+            $_SESSION["chatroom"] = 'lobby';
+            header("Location: lobby.php");
+        }
+```
+
+```PHP
+if (!isset($_SESSION["username"])) {
+    header("Location: login.php");
+} else {
+    //header("Location: ");
+    header("Location: lobby.php");
+}
+```
+
+Siempre que se entre al Lobby (porque se pulse el botón de "Ir al Lobby" dentro del chat) debe establecerse también como sala el mismo lobby.
+
+```PHP
+$_SESSION["chatroom"] = "lobby";
+$sql = $db->query("UPDATE `users` SET current_room = 'lobby' WHERE id = '".$_SESSION["userid"]."'");
+```
+
+Cuando se selecciona una sala en el Lobby se creaa una variable *GET* llamada *goroom*. Se comprueba que la sala exista y que haya permiso para entrar en ella. Si hay permiso se mueve a la sala, si no, se vuelve al Lobby y se muestra el motivo por el que no se puede acceder a la sala (gracias a la función *AllowedInRoom()* que hemos visto en el [sistema de usuarios](#sistema-de-usuarios))
+
+```PHP
+if (isset($_GET["goroom"])) {
+    $room = htmlentities($_GET["goroom"]);
+    $sql = "SELECT * FROM `rooms` WHERE shortname = '".$room."'";
+    $query = $db->query($sql);
+    $resp = $query->fetch_array();
+
+    if ($query->num_rows > 0) {
+        //La sala existe, comprobamos todo lo demás
+        $conditions = $resp["conditions"];
+
+        if (AllowedInRoom($_SESSION['userid'], $room) == 'ok') {
+            $_SESSION["chatroom"] = $room;
+            $sql = $db->query("UPDATE `users` SET current_room = '".$room."' WHERE id = '".$_SESSION["userid"]."'");
+            header("Location: chat.php");
+        } else {
+            $error = AllowedInRoom($_SESSION["userid"], $room);
+        }
+    } else {
+        header("Location: lobby.php");
+    }
+}
+```
+
+Una vez dentro de cada sala se mostrarán únicamente en la lista de usuarios las personas que hay conectadas en esa sala como hemos visto en el [sistema de usuarios](#sistema-de-usuarios) y los mensajes que se envían en esa sala en concreto, como también hemos visto en la sección de [chat](#chat).
+
+Cada sala tiene su propio estilo css para que la experiencia en cada sala sea distinta.
+
+```PHP
+        if (file_exists('css/room_styles/'.$_SESSION["chatroom"].'.css'))  {
+            echo '<link href="css/room_styles/'.$_SESSION["chatroom"].'.css" rel="stylesheet">';
+        } 
+```
+
+Normalmente una persona puede moverse pulsando el botón de "Ir al Lobby", aunque, en las ocasiones en las que un guardia utiliza el comando */capturar* para mover a un usuario, éste perderá la capacidad de moverse de sala hasta que se le vuelva a mover con el comando */llevar*, esto lo veremos mejor en la sección de [comandos](#comandos).
+
+```PHP
+                    if (getUserInfo($_SESSION["userid"])['can_move'] == 1) {
+                        echo '<p><input type="submit" name="lobby" value="Ir al Lobby" class="menu_button" /></p>';
+                    } else {
+                        echo '<p><input type="submit" name="lobby" value="Ir al Lobby" class="menu_button" disabled /></p>';
+                    }
+```
+
+Los guardias, como veremos de forma más específica en la sección de [rangos](#rangos) y [comandos](#comandos) tienen varios poderes para manejar dónde están los usuarios: en concreto los comandos */capturar* y */llevar*. Estos comandos lo que hacen es cambiar en la base de datos el campo *current_room* de alguien concreto en la tabla de usuarios.
+
+Para poder hacer efectivo en el chat este cambio lo que hice fue aprovechar la actualización cada segundo de la lista de usuarios (aunque podría haber usado el chat igualmente) para hacer una comrpobación de la sala que aparece en la base de datos. En caso de que la *current_room* de la base de datos y la de la variable de sesión *chatroom* sean distintas, esto implicará, en absolutamente todos los casos, que se ha movido de sala a la perona. En este caso se igualaría la variable de sesión y se dirigiría la página directamente a chat.php con la intención de mostrar la nueva sala y actualizar siempre el *last_chat_refresh* (la razón por la que desde chat.php vamos a chat.php en vez de actualizar la página es eliminar los posibles *$_GET["return]* y asegurarnos de que se actualiza el *last_chat_refresh*)
+
+```PHP
+$roomInDb = getUserInfo($_SESSION["userid"])['current_room'];
+if ($roomInDb != $_SESSION["chatroom"]) {
+    if ($roomInDb == "lobby") {
+        $_SESSION["chatroom"] = $roomInDb;
+        echo '<script type="text/JavaScript"> location.assign("lobby.php"); </script>';
+    } else {
+        $_SESSION["chatroom"] = $roomInDb;
+        echo '<script type="text/JavaScript"> location.assign("chat.php"); </script>';
+    }
+}
 ```
